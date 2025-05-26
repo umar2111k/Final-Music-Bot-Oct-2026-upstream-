@@ -13,8 +13,8 @@ from BADMUSIC.utils.database import (
     is_active_chat,
     is_Music_playing,
     is_nonadmin_chat,
-    Music_off,
-    Music_on,
+    music_off,
+    music_on,
     set_loop,
 )
 from BADMUSIC.utils.decorators.language import languageCB
@@ -135,7 +135,7 @@ async def del_back_playlist(client, CallbackQuery, _):
         if not await is_Music_playing(chat_id):
             return await CallbackQuery.answer(_["admin_1"], show_alert=True)
         await CallbackQuery.answer()
-        await Music_off(chat_id)
+        await music_off(chat_id)
         await Bad.pause_stream(chat_id)
         await CallbackQuery.message.reply_text(
             _["admin_2"].format(mention), reply_markup=close_markup(_)
@@ -144,7 +144,7 @@ async def del_back_playlist(client, CallbackQuery, _):
         if await is_Music_playing(chat_id):
             return await CallbackQuery.answer(_["admin_3"], show_alert=True)
         await CallbackQuery.answer()
-        await Music_on(chat_id)
+        await music_on(chat_id)
         await Bad.resume_stream(chat_id)
         await CallbackQuery.message.reply_text(
             _["admin_4"].format(mention), reply_markup=close_markup(_)
@@ -395,3 +395,4 @@ async def markup_timer():
 
 
 asyncio.create_task(markup_timer())
+                    
