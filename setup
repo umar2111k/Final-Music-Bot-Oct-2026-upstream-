@@ -112,9 +112,6 @@ BADMUSIC_HEADER() {
     echo "${cskyblue} |____/_/    \_\_____/|_|  |_|\____/|_____/|_____\_____|${creset}"
 }
 
-# Show header before API input
-BADMUSIC_HEADER
-
 # Show header again above API section if needed
 BADMUSIC_HEADER
 
