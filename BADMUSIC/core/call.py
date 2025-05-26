@@ -38,7 +38,7 @@ from BADMUSIC.utils.database import (
     remove_active_video_chat,
     set_loop,
 )
-from BADMUSIC.utils.extraction import AssistantErr
+from BADMUSIC.utils.exceptions import AssistantErr
 from BADMUSIC.utils.formatters import check_duration, seconds_to_min, speed_converter
 from BADMUSIC.utils.inline.play import stream_markup
 from BADMUSIC.utils.stream.autoclear import auto_clean
