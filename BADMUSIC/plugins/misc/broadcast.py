@@ -14,7 +14,7 @@ from BADMUSIC.utils.database import (
     get_served_users,
 )
 from BADMUSIC.utils.decorators.language import language
-from BADMUSIC.utils.formatters import alpha_to_int
+from BADMUSIC.utils.formatters import Bad_to_int
 from config import adminlist
 
 IS_BROADCASTING = False
@@ -160,7 +160,7 @@ async def auto_clean():
                             adminlist[chat_id].append(user.user.id)
                     authusers = await get_authuser_names(chat_id)
                     for user in authusers:
-                        user_id = await alpha_to_int(user)
+                        user_id = await Bad_to_int(user)
                         adminlist[chat_id].append(user_id)
         except:
             continue
