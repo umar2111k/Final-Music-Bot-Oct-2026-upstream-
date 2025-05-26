@@ -4,16 +4,17 @@ from youtubesearchpython.__future__ import VideosSearch
 from BADMUSIC import app
 from config import YOUTUBE_IMG_URL
 
-# Load fonts (optimized for performance)
-try:
-    title_font = ImageFont.truetype("BADMUSIC/assets/font3.ttf", 50)  # Bold, larger title font
-    info_font = ImageFont.truetype("BADMUSIC/assets/font2.ttf", 35)   # Clean info font
-    time_font = ImageFont.truetype("BADMUSIC/assets/font.ttf", 30)    # For duration
-except Exception as e:
-    print(f"Font loading error: {e}")
-    title_font = ImageFont.load_default()
-    info_font = ImageFont.load_default()
-    time_font = ImageFont.load_default()
+# Load fonts (robust fallback)
+def load_font(path, size):
+    try:
+        return ImageFont.truetype(path, size)
+    except Exception as e:
+        print(f"Font loading error: {e}")
+        return ImageFont.load_default()
+
+title_font = load_font("BADMUSIC/assets/font3.ttf", 50)  # Bold, larger title font
+info_font  = load_font("BADMUSIC/assets/font2.ttf", 35)   # Clean info font
+time_font  = load_font("BADMUSIC/assets/font.ttf", 30)    # For duration
 
 def changeImageSize(maxWidth, maxHeight, image):
     """Resize image while maintaining aspect ratio."""
@@ -35,16 +36,17 @@ def truncate(text, max_length=25):
     return [text1.strip(), text2.strip()]
 
 def create_gradient_background(width, height, color1, color2):
-    """Create a smooth gradient background."""
+    """Create a smooth vertical gradient background (fixed for PIL)."""
     base = Image.new('RGBA', (width, height), color1)
     top = Image.new('RGBA', (width, height), color2)
     mask = Image.new('L', (width, height))
     mask_data = []
     for y in range(height):
-        for x in range(width):
-            mask_data.append(int(255 * (y / height)))
+        v = int(255 * (y / (height - 1)))
+        mask_data.extend([v] * width)
     mask.putdata(mask_data)
-    return Image.blend(base, top, mask=mask)
+    # Use composite instead of blend for mask support
+    return Image.composite(top, base, mask)
 
 def create_rgb_neon_circle(image, center, radius, border_width, steps=40):
     """Create a vibrant RGB neon glow effect around a circular thumbnail."""
@@ -60,7 +62,7 @@ def create_rgb_neon_circle(image, center, radius, border_width, steps=40):
             center[1] - radius - border_width + step,
             center[0] + radius + border_width - step,
             center[1] + radius + border_width - step
-        ], outline=(red, green, blue, alpha), width=border_width // steps)
+        ], outline=(red, green, blue, alpha), width=max(border_width // steps, 1))
     return image
 
 def crop_center_circle(img, output_size, border, crop_scale=1.4):
@@ -89,12 +91,10 @@ def crop_center_circle(img, output_size, border, crop_scale=1.4):
 
 async def get_thumb(videoid):
     """Generate a vibrant YouTube thumbnail."""
-    # Check cache
     cache_path = f"cache/{videoid}_v5.png"
     if os.path.isfile(cache_path):
         return cache_path
 
-    # Fetch YouTube video details
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = await VideosSearch(url, limit=1).next()
@@ -105,32 +105,30 @@ async def get_thumb(videoid):
         print(f"Error fetching YouTube results: {e}")
         return YOUTUBE_IMG_URL
 
-    # Extract video details
-    title = re.sub("\W+", " ", result.get("title", "Unsupported Title")).title()
+    title = re.sub(r"\W+", " ", result.get("title", "Unsupported Title")).title()
     duration = result.get("duration", "Unknown Mins")
     thumbnail = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
     views = result.get("viewCount", {}).get("short", "Unknown Views")
     channel = result.get("channel", {}).get("name", "Unknown Channel")
 
-    # Download thumbnail
     temp_thumb = f"cache/thumb{videoid}.png"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(thumbnail) as resp:
-            if resp.status == 200:
-                async with aiofiles.open(temp_thumb, mode="wb") as f:
-                    await f.write(await resp.read())
-            else:
-                return YOUTUBE_IMG_URL
-
     try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(thumbnail) as resp:
+                if resp.status == 200:
+                    async with aiofiles.open(temp_thumb, mode="wb") as f:
+                        await f.write(await resp.read())
+                else:
+                    return YOUTUBE_IMG_URL
+
         # Open and process thumbnail
-        youtube = Image.open(temp_thumb)
+        youtube = Image.open(temp_thumb).convert("RGBA")
         image = changeImageSize(1280, 720, youtube)
         image = image.convert("RGBA")
 
         # Create gradient background
         gradient_bg = create_gradient_background(1280, 720, (50, 0, 100), (0, 150, 255))
-        background = gradient_bg.filter(filter=ImageFilter.GaussianBlur(10))
+        background = gradient_bg.filter(ImageFilter.GaussianBlur(10))
         enhancer = ImageEnhance.Brightness(background)
         background = enhancer.enhance(0.8)
         draw = ImageDraw.Draw(background)
@@ -167,6 +165,9 @@ async def get_thumb(videoid):
         # Add play icons (ensure the file exists)
         try:
             play_icons = Image.open("BADMUSIC/assets/play_icons.png").resize((600, 70), Image.LANCZOS)
+            # If play_icons is not 'RGBA', convert for alpha mask
+            if play_icons.mode != "RGBA":
+                play_icons = play_icons.convert("RGBA")
             background.paste(play_icons, (600, 420), play_icons)
         except FileNotFoundError:
             print("Play icons file not found, skipping.")
@@ -178,7 +179,8 @@ async def get_thumb(videoid):
         final_image.paste(background, (border_width, border_width))
 
         # Save and clean up
-        os.remove(temp_thumb)
+        if os.path.exists(temp_thumb):
+            os.remove(temp_thumb)
         final_image.save(cache_path, quality=95)
         return cache_path
     except Exception as e:
