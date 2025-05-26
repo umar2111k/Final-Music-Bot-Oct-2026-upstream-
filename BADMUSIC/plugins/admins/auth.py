@@ -2,7 +2,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from BADMUSIC import app
-from BADMUSIC.utils import extract_user, int_to_alpha
+from BADMUSIC.utils import extract_user, int_to_Bad
 from BADMUSIC.utils.database import (
     delete_authuser,
     get_authuser,
@@ -21,7 +21,7 @@ async def auth(client, message: Message, _):
         if len(message.command) != 2:
             return await message.reply_text(_["general_1"])
     user = await extract_user(message)
-    token = await int_to_alpha(user.id)
+    token = await int_to_Bad(user.id)
     _check = await get_authuser_names(message.chat.id)
     count = len(_check)
     if int(count) == 25:
@@ -50,7 +50,7 @@ async def unauthusers(client, message: Message, _):
         if len(message.command) != 2:
             return await message.reply_text(_["general_1"])
     user = await extract_user(message)
-    token = await int_to_alpha(user.id)
+    token = await int_to_Bad(user.id)
     deleted = await delete_authuser(message.chat.id, token)
     get = adminlist.get(message.chat.id)
     if get:
