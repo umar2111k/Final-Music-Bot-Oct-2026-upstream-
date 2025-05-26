@@ -1,122 +1,188 @@
-import os
-import re
-
-import aiofiles
-import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
-from unidecode import unidecode
+import os, re, random, aiofiles, aiohttp, math
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from youtubesearchpython.__future__ import VideosSearch
-
 from BADMUSIC import app
 from config import YOUTUBE_IMG_URL
 
+# Load fonts (optimized for performance)
+try:
+    title_font = ImageFont.truetype("BADMUSIC/assets/font3.ttf", 50)  # Bold, larger title font
+    info_font = ImageFont.truetype("BADMUSIC/assets/font2.ttf", 35)   # Clean info font
+    time_font = ImageFont.truetype("BADMUSIC/assets/font.ttf", 30)    # For duration
+except Exception as e:
+    print(f"Font loading error: {e}")
+    title_font = ImageFont.load_default()
+    info_font = ImageFont.load_default()
+    time_font = ImageFont.load_default()
 
 def changeImageSize(maxWidth, maxHeight, image):
+    """Resize image while maintaining aspect ratio."""
     widthRatio = maxWidth / image.size[0]
     heightRatio = maxHeight / image.size[1]
     newWidth = int(widthRatio * image.size[0])
     newHeight = int(heightRatio * image.size[1])
-    newImage = image.resize((newWidth, newHeight))
-    return newImage
+    return image.resize((newWidth, newHeight), Image.LANCZOS)
 
+def truncate(text, max_length=25):
+    """Truncate text into two lines with a max length per line."""
+    words = text.split(" ")
+    text1, text2 = "", ""
+    for word in words:
+        if len(text1) + len(word) < max_length:
+            text1 += " " + word
+        elif len(text2) + len(word) < max_length:
+            text2 += " " + word
+    return [text1.strip(), text2.strip()]
 
-def clear(text):
-    list = text.split(" ")
-    title = ""
-    for i in list:
-        if len(title) + len(i) < 60:
-            title += " " + i
-    return title.strip()
+def create_gradient_background(width, height, color1, color2):
+    """Create a smooth gradient background."""
+    base = Image.new('RGBA', (width, height), color1)
+    top = Image.new('RGBA', (width, height), color2)
+    mask = Image.new('L', (width, height))
+    mask_data = []
+    for y in range(height):
+        for x in range(width):
+            mask_data.append(int(255 * (y / height)))
+    mask.putdata(mask_data)
+    return Image.blend(base, top, mask=mask)
 
+def create_rgb_neon_circle(image, center, radius, border_width, steps=40):
+    """Create a vibrant RGB neon glow effect around a circular thumbnail."""
+    draw = ImageDraw.Draw(image)
+    for step in range(steps):
+        t = step / steps * math.pi * 2
+        red = int((math.sin(t) * 127) + 128)
+        green = int((math.sin(t + math.pi / 3) * 127) + 128)
+        blue = int((math.sin(t + math.pi * 2 / 3) * 127) + 128)
+        alpha = int(255 * (1 - step / steps))
+        draw.ellipse([
+            center[0] - radius - border_width + step,
+            center[1] - radius - border_width + step,
+            center[0] + radius + border_width - step,
+            center[1] + radius + border_width - step
+        ], outline=(red, green, blue, alpha), width=border_width // steps)
+    return image
+
+def crop_center_circle(img, output_size, border, crop_scale=1.4):
+    """Crop and create a circular thumbnail with a neon border."""
+    half_width, half_height = img.size[0] / 2, img.size[1] / 2
+    larger_size = int(output_size * crop_scale)
+    img = img.crop((
+        half_width - larger_size / 2,
+        half_height - larger_size / 2,
+        half_width + larger_size / 2,
+        half_height + larger_size / 2
+    ))
+    img = img.resize((output_size - 2 * border, output_size - 2 * border), Image.LANCZOS)
+    final_img = Image.new("RGBA", (output_size, output_size), (0, 0, 0, 0))
+    mask_main = Image.new("L", (output_size - 2 * border, output_size - 2 * border), 0)
+    draw_main = ImageDraw.Draw(mask_main)
+    draw_main.ellipse((0, 0, output_size - 2 * border, output_size - 2 * border), fill=255)
+    final_img.paste(img, (border, border), mask_main)
+    mask_border = Image.new("L", (output_size, output_size), 0)
+    draw_border = ImageDraw.Draw(mask_border)
+    draw_border.ellipse((0, 0, output_size, output_size), fill=255)
+    result = Image.composite(final_img, Image.new("RGBA", final_img.size, (0, 0, 0, 0)), mask_border)
+    center = (output_size // 2, output_size // 2)
+    radius = (output_size - 2 * border) // 2
+    return create_rgb_neon_circle(result, center, radius, 15)
 
 async def get_thumb(videoid):
-    if os.path.isfile(f"cache/{videoid}.png"):
-        return f"cache/{videoid}.png"
+    """Generate a vibrant YouTube thumbnail."""
+    # Check cache
+    cache_path = f"cache/{videoid}_v5.png"
+    if os.path.isfile(cache_path):
+        return cache_path
 
+    # Fetch YouTube video details
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
-        results = VideosSearch(url, limit=1)
-        for result in (await results.next())["result"]:
-            try:
-                title = result["title"]
-                title = re.sub("\W+", " ", title)
-                title = title.title()
-            except:
-                title = "Unsupported Title"
-            try:
-                duration = result["duration"]
-            except:
-                duration = "Unknown Mins"
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            try:
-                views = result["viewCount"]["short"]
-            except:
-                views = "Unknown Views"
-            try:
-                channel = result["channel"]["name"]
-            except:
-                channel = "Unknown Channel"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(thumbnail) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
-                    await f.write(await resp.read())
-                    await f.close()
-
-        youtube = Image.open(f"cache/thumb{videoid}.png")
-        image1 = changeImageSize(1280, 720, youtube)
-        image2 = image1.convert("RGBA")
-        background = image2.filter(filter=ImageFilter.BoxBlur(0))
-        enhancer = ImageEnhance.Brightness(background)
-        background = enhancer.enhance(1.1)
-        draw = ImageDraw.Draw(background)
-        arial = ImageFont.truetype("BADMUSIC/assets/font2.ttf", 49)
-        font = ImageFont.truetype("BADMUSIC/assets/font.ttf", 48)
-        draw.text((1000, 8), unidecode(app.name), fill="Green", font=font)
-    #    draw.text(
-    #        (55, 560),
-    #        f"{channel} | {views[:23]}",
-    #        (255, 255, 255),
-    #        font=arial,
-    #    )
-        draw.text(
-            (40, 570),
-            clear(title),
-            (0, 0, 0), 
-            font=font,
-        )
-        draw.line(
-            [(55, 660), (1220, 660)],
-            fill="green",
-            width=15,
-            joint="curve",
-        )
-        draw.ellipse(
-            [(918, 648), (942, 672)],
-            outline="black",
-            fill="black",
-            width=30,
-        )
-        draw.text(
-            (36, 670),
-            "00:00",
-            (0, 0, 0),
-            font=font,
-        )
-        draw.text(
-            (1185, 670),
-            f"{duration[:23]}",
-            (0, 0, 0),
-            font=font,
-        )
-        try:
-            os.remove(f"cache/thumb{videoid}.png")
-        except:
-            pass
-        background.save(f"cache/{videoid}.png")
-        return f"cache/{videoid}.png"
+        results = await VideosSearch(url, limit=1).next()
+        if not results or not results.get("result"):
+            return YOUTUBE_IMG_URL
+        result = results["result"][0]
     except Exception as e:
-        print(e)
+        print(f"Error fetching YouTube results: {e}")
         return YOUTUBE_IMG_URL
-        
+
+    # Extract video details
+    title = re.sub("\W+", " ", result.get("title", "Unsupported Title")).title()
+    duration = result.get("duration", "Unknown Mins")
+    thumbnail = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
+    views = result.get("viewCount", {}).get("short", "Unknown Views")
+    channel = result.get("channel", {}).get("name", "Unknown Channel")
+
+    # Download thumbnail
+    temp_thumb = f"cache/thumb{videoid}.png"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(thumbnail) as resp:
+            if resp.status == 200:
+                async with aiofiles.open(temp_thumb, mode="wb") as f:
+                    await f.write(await resp.read())
+            else:
+                return YOUTUBE_IMG_URL
+
+    try:
+        # Open and process thumbnail
+        youtube = Image.open(temp_thumb)
+        image = changeImageSize(1280, 720, youtube)
+        image = image.convert("RGBA")
+
+        # Create gradient background
+        gradient_bg = create_gradient_background(1280, 720, (50, 0, 100), (0, 150, 255))
+        background = gradient_bg.filter(filter=ImageFilter.GaussianBlur(10))
+        enhancer = ImageEnhance.Brightness(background)
+        background = enhancer.enhance(0.8)
+        draw = ImageDraw.Draw(background)
+
+        # Add circular thumbnail with neon effect
+        circle_thumbnail = crop_center_circle(youtube, 450, 25)
+        background.paste(circle_thumbnail, (100, 135), circle_thumbnail)
+
+        # Add text with shadow effect
+        title_lines = truncate(title, 25)
+        shadow_offset = 3
+        for i, line in enumerate(title_lines):
+            if line:
+                x, y = 600, 150 + i * 60
+                # Shadow
+                draw.text((x + shadow_offset, y + shadow_offset), line, fill=(0, 0, 0, 128), font=title_font)
+                # Main text
+                draw.text((x, y), line, fill=(255, 255, 255), font=title_font)
+
+        # Channel and views
+        info_text = f"{channel} | {views[:20]}"
+        draw.text((600 + shadow_offset, 270 + shadow_offset), info_text, fill=(0, 0, 0, 128), font=info_font)
+        draw.text((600, 270), info_text, fill=(255, 255, 255), font=info_font)
+
+        # Progress bar with neon effect
+        line_length = 600
+        progress = int(line_length * 0.7)
+        draw.rectangle([(600, 350, 600 + line_length, 360)], fill=(50, 50, 50))
+        draw.rectangle([(600, 350, 600 + progress, 360)], fill=(255, 50, 50))
+        draw.ellipse([600 + progress - 10, 350 - 5, 600 + progress + 10, 360 + 5], fill=(255, 50, 50))
+        draw.text((600, 370), "00:00", (255, 255, 255), font=time_font)
+        draw.text((1100, 370), duration, (255, 255, 255), font=time_font)
+
+        # Add play icons (ensure the file exists)
+        try:
+            play_icons = Image.open("BADMUSIC/assets/play_icons.png").resize((600, 70), Image.LANCZOS)
+            background.paste(play_icons, (600, 420), play_icons)
+        except FileNotFoundError:
+            print("Play icons file not found, skipping.")
+
+        # Add border glow
+        border_width = 20
+        border_color = (255, 50, 100, 200)
+        final_image = Image.new("RGBA", (1280 + 2 * border_width, 720 + 2 * border_width), border_color)
+        final_image.paste(background, (border_width, border_width))
+
+        # Save and clean up
+        os.remove(temp_thumb)
+        final_image.save(cache_path, quality=95)
+        return cache_path
+    except Exception as e:
+        print(f"Error processing thumbnail: {e}")
+        if os.path.exists(temp_thumb):
+            os.remove(temp_thumb)
+        return YOUTUBE_IMG_URL
