@@ -1,61 +1,122 @@
 import os
-import math
-import textwrap
+import re
+
+import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from io import BytesIO
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from unidecode import unidecode
+from youtubesearchpython.__future__ import VideosSearch
 
-async def fetch_image(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            return await resp.read()
+from BADMUSIC import app
+from config import YOUTUBE_IMG_URL
 
-async def gen_thumb(videoid, title, views, duration, channel):
+
+def changeImageSize(maxWidth, maxHeight, image):
+    widthRatio = maxWidth / image.size[0]
+    heightRatio = maxHeight / image.size[1]
+    newWidth = int(widthRatio * image.size[0])
+    newHeight = int(heightRatio * image.size[1])
+    newImage = image.resize((newWidth, newHeight))
+    return newImage
+
+
+def clear(text):
+    list = text.split(" ")
+    title = ""
+    for i in list:
+        if len(title) + len(i) < 60:
+            title += " " + i
+    return title.strip()
+
+
+async def get_thumb(videoid):
+    if os.path.isfile(f"cache/{videoid}.png"):
+        return f"cache/{videoid}.png"
+
+    url = f"https://www.youtube.com/watch?v={videoid}"
     try:
-        thumb_url = f"https://img.youtube.com/vi/{videoid}/maxresdefault.jpg"
-        thumb_data = await fetch_image(thumb_url)
-        image = Image.open(BytesIO(thumb_data)).convert("RGB")
-    except:
-        thumb_url = f"https://img.youtube.com/vi/{videoid}/hqdefault.jpg"
-        thumb_data = await fetch_image(thumb_url)
-        image = Image.open(BytesIO(thumb_data)).convert("RGB")
+        results = VideosSearch(url, limit=1)
+        for result in (await results.next())["result"]:
+            try:
+                title = result["title"]
+                title = re.sub("\W+", " ", title)
+                title = title.title()
+            except:
+                title = "Unsupported Title"
+            try:
+                duration = result["duration"]
+            except:
+                duration = "Unknown Mins"
+            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
+            try:
+                views = result["viewCount"]["short"]
+            except:
+                views = "Unknown Views"
+            try:
+                channel = result["channel"]["name"]
+            except:
+                channel = "Unknown Channel"
 
-    image = image.resize((1280, 720))
-    draw = ImageDraw.Draw(image)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(thumbnail) as resp:
+                if resp.status == 200:
+                    f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
+                    await f.write(await resp.read())
+                    await f.close()
 
-    # Load fonts
-    title_font = ImageFont.truetype("assets/font2.ttf", 70)
-    info_font = ImageFont.truetype("assets/font2.ttf", 40)
-    small_font = ImageFont.truetype("assets/font2.ttf", 35)
-
-    # Blur background strip for text
-    text_bg = image.crop((0, 550, 1280, 720)).filter(ImageFilter.GaussianBlur(10))
-    image.paste(text_bg, (0, 550))
-
-    # Gradient bar
-    bar = Image.new("RGB", (1280, 20), color=0)
-    gradient = ImageDraw.Draw(bar)
-    for i in range(1280):
-        r = int(255 * (i / 1280))
-        g = int(255 * ((1280 - i) / 1280))
-        b = 255
-        gradient.line([(i, 0), (i, 20)], fill=(r, g, b))
-    image.paste(bar, (0, 700))
-
-    # Channel, views, duration
-    draw.text((30, 560), f"Channel: {channel}", font=info_font, fill="white")
-    draw.text((30, 610), f"Views: {views}", font=info_font, fill="white")
-    draw.text((30, 660), f"Duration: {duration}", font=info_font, fill="white")
-
-    # Title wrap
-    wrapped_title = textwrap.fill(title, width=35)
-    draw.text((30, 30), wrapped_title, font=title_font, fill="white")
-
-    # Watermark
-    draw.text((1000, 670), "MyMusicBot", font=small_font, fill="lightgray")
-
-    # Optional neon ring or profile photo (extend here as needed)
-
-    out_path = f"downloads/thumb_{videoid}.png"
-    image.save(out_path, "PNG")
-    return out_path
+        youtube = Image.open(f"cache/thumb{videoid}.png")
+        image1 = changeImageSize(1280, 720, youtube)
+        image2 = image1.convert("RGBA")
+        background = image2.filter(filter=ImageFilter.BoxBlur(0))
+        enhancer = ImageEnhance.Brightness(background)
+        background = enhancer.enhance(1.1)
+        draw = ImageDraw.Draw(background)
+        arial = ImageFont.truetype("BADMUSIC/assets/font2.ttf", 49)
+        font = ImageFont.truetype("BADMUSIC/assets/font.ttf", 48)
+        draw.text((1000, 8), unidecode(app.name), fill="Green", font=font)
+    #    draw.text(
+    #        (55, 560),
+    #        f"{channel} | {views[:23]}",
+    #        (255, 255, 255),
+    #        font=arial,
+    #    )
+        draw.text(
+            (40, 570),
+            clear(title),
+            (0, 0, 0), 
+            font=font,
+        )
+        draw.line(
+            [(55, 660), (1220, 660)],
+            fill="green",
+            width=15,
+            joint="curve",
+        )
+        draw.ellipse(
+            [(918, 648), (942, 672)],
+            outline="black",
+            fill="black",
+            width=30,
+        )
+        draw.text(
+            (36, 670),
+            "00:00",
+            (0, 0, 0),
+            font=font,
+        )
+        draw.text(
+            (1185, 670),
+            f"{duration[:23]}",
+            (0, 0, 0),
+            font=font,
+        )
+        try:
+            os.remove(f"cache/thumb{videoid}.png")
+        except:
+            pass
+        background.save(f"cache/{videoid}.png")
+        return f"cache/{videoid}.png"
+    except Exception as e:
+        print(e)
+        return YOUTUBE_IMG_URL
+        
