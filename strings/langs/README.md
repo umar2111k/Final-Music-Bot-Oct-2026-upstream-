@@ -13,20 +13,3 @@
 <img src="https://readme-typing-svg.herokuapp.com?color=FF0000&width=420&lines=MADE+BYE+BADMUNDA%E2%9D%A4%EF%B8%8F"> 
 
         •━━━━━━━━•••━━━━━━━━•
-
-
-<h3 align="center">
-    ─「 ❣👇sᴘᴇᴄɪᴀʟ❣️ᴛᴀɢᴀʟʟ👇 」─   
-</h3>
-
-<h3 align="center">
-    ─「 ❣️ᴛᴇʟᴇɢʀᴀᴘʜ ʟɪɴᴋ❣️ 」─   
-</h3>
-
-<h3 align="center">
-    ─「 ❣️ʙᴀss sᴏɴɢ❣️ 」─   
-</h3>
-
-<h3 align="center">
-    ─「 ❣️sʜᴀʏᴀʀɪ❣️ 」─   
-</h3>
