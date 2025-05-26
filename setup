@@ -101,15 +101,14 @@ pprint "${cgreen}" "\n\nBADMUSIC Installation Completed !"
 sleep 1
 clear
 
-# BADMUSIC ASCII Art Header (Sky Blue + Pink)
+# BADMUSIC ASCII
 BADMUSIC_HEADER() {
-    echo -e "${cskyblue}"
-    echo "  ____          _____  __  __ _    _  _____ _____ _____ "
-    echo " |  _ \   /\   |  __ \|  \/  | |  | |/ ____|_   _/ ____|"
+    echo -e "${cskyblue}  ____          _____  __  __ _    _  _____ _____ _____ "
+    echo -e "${cskyblue} |  _ \   /\   |  __ \|  \/  | |  | |/ ____|_   _/ ____|"
     echo -e "${cpink} | |_) | /  \  | |  | | \  / | |  | | (___   | || |     "
-    echo "${cskyblue} |  _ < / /\ \ | |  | | |\/| | |  | |\___ \  | || |     "
+    echo -e "${cskyblue} |  _ < / /\ \ | |  | | |\/| | |  | |\___ \  | || |     "
     echo -e "${cpink} | |_) / ____ \| |__| | |  | | |__| |____) |_| || |____ "
-    echo "${cskyblue} |____/_/    \_\_____/|_|  |_|\____/|_____/|_____\_____|${creset}"
+    echo -e "${cskyblue} |____/_/    \_\_____/|_|  |_|\____/|_____/|_____\_____|${creset}"
 }
 
 # Show header again above API section if needed
