@@ -303,13 +303,11 @@ async def is_Music_playing(chat_id: int) -> bool:
     if not mode:
         return False
     return mode
-
-
-async def Music_on(chat_id: int):
+    
+async def music_on(chat_id: int):
     pause[chat_id] = True
 
-
-async def Music_off(chat_id: int):
+async def music_off(chat_id: int):
     pause[chat_id] = False
 
 
