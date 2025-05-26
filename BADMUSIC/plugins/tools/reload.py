@@ -10,7 +10,7 @@ from BADMUSIC.core.call import Bad
 from BADMUSIC.misc import db
 from BADMUSIC.utils.database import get_assistant, get_authuser_names, get_cmode
 from BADMUSIC.utils.decorators import ActualAdminCB, AdminActual, language
-from BADMUSIC.utils.formatters import alpha_to_int, get_readable_time
+from BADMUSIC.utils.formatters import Bad_to_int, get_readable_time
 from config import BANNED_USERS, adminlist, lyrical
 
 rel = {}
@@ -37,7 +37,7 @@ async def reload_admin_cache(client, message: Message, _):
                 adminlist[message.chat.id].append(user.user.id)
         authusers = await get_authuser_names(message.chat.id)
         for user in authusers:
-            user_id = await alpha_to_int(user)
+            user_id = await Bad_to_int(user)
             adminlist[message.chat.id].append(user_id)
         now = int(time.time()) + 180
         rel[message.chat.id] = now
