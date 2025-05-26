@@ -16,7 +16,7 @@ from BADMUSIC.utils.database import (
 from config import SUPPORT_CHAT, adminlist, confirmer
 from strings import get_string
 
-from ..formatters import int_to_alpha
+from ..formatters import int_to_Bad
 
 
 def AdminRightsCheck(mystic):
@@ -188,7 +188,7 @@ def ActualAdminCB(mystic):
                 return await CallbackQuery.answer(_["general_4"], show_alert=True)
             if not a.can_manage_video_chats:
                 if CallbackQuery.from_user.id not in SUDOERS:
-                    token = await int_to_alpha(CallbackQuery.from_user.id)
+                    token = await int_to_Bad(CallbackQuery.from_user.id)
                     _check = await get_authuser_names(CallbackQuery.from_user.id)
                     if token not in _check:
                         try:
