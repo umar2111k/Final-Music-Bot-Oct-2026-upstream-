@@ -43,6 +43,8 @@ async def get_assistant_number(chat_id: int) -> str:
     assistant = assistantdict.get(chat_id)
     return assistant
 
+async def delete_served_chat(chat_id: int):
+    await chatsdb.delete_one({"chat_id": chat_id})
 
 async def get_client(assistant: int):
     if int(assistant) == 1:
