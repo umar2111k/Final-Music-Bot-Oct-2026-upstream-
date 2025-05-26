@@ -49,6 +49,16 @@ class Bad(Client):
             exit()
         LOGGER(__name__).info(f"❖ ʙᴀᴅ ᴍᴜꜱɪᴄ ʙᴏᴛ ꜱᴛᴀʀᴛᴇᴅ ᴀꜱ ➥ {self.name} ...♥︎")
 
+async def stop(self):
+    try:
+        await self.send_message(
+            chat_id=config.LOGGER_ID,
+            text="❖ ɢᴏᴏᴅ ʙʏᴇ, ɪ ᴀᴍ ɢᴏɪɴɢ ᴛᴏ ᴏꜰꜰʟɪɴᴇ."
+        )
+    except Exception as ex:
+        LOGGER(__name__).error(f"❖ ꜰᴀɪʟᴇᴅ ᴛᴏ ꜱᴇɴᴅ ᴏꜰꜰʟɪɴᴇ ᴍᴇꜱꜱᴀɢᴇ: {type(ex).__name__}")
+    await super().stop()
+
     async def stop(self):
         await super().stop()
       
