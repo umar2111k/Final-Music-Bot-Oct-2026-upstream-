@@ -9,9 +9,8 @@ from BADMUSIC.utils.decorators.language import LanguageStart, languageCB
 from BADMUSIC.utils.inline.help import help_back_markup, private_help_panel
 from config import BANNED_USERS, START_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
-from BADMUSIC.utils.stuffs.helper import Helper
 
-PRO = [
+BAD = [
     "https://graph.org/file/eaa3a2602e43844a488a5.jpg",
     "https://graph.org/file/b129e98b6e5c4db81c15f.jpg",
     "https://graph.org/file/3ccb86d7d62e8ee0a2e8b.jpg",
@@ -53,7 +52,7 @@ async def helper_private(
         _ = get_string(language)
         keyboard = help_pannel(_)
         await update.reply_photo(
-            photo=random.choice(PRO),
+            photo=random.choice(BAD),
             caption=_["help_1"].format(SUPPORT_CHAT),
             reply_markup=keyboard,
         )
