@@ -26,12 +26,12 @@ def track_markup(_, videoid, user_id, channel, fplay):
     ]
     return buttons
 
-
 def stream_markup_timer(_, chat_id, played, dur):
     played_sec = time_to_seconds(played)
     duration_sec = time_to_seconds(dur)
     percentage = (played_sec / duration_sec) * 100
     Bad = math.floor(percentage)
+    # Progress bar (ba)
     if 0 < Bad <= 10:
         ba = "⚪─────────"
     elif 10 < Bad < 20:
@@ -53,8 +53,7 @@ def stream_markup_timer(_, chat_id, played, dur):
     else:
         ba = "━━━━━━━━━⚪"
 
-##bar of wynk---------------------------------------
-    
+    # Text bar (bar)
     if 0 < Bad <= 5:
         bar = "𝐁α∂ 𝐌υʂιƈ 𝐁𝖾𝗌𝗍 𝐅𝖾α𝗍υ𝗋𝖾𝗌"
     elif 5 <= Bad < 10:
@@ -95,7 +94,7 @@ def stream_markup_timer(_, chat_id, played, dur):
         bar = "𝐒ⱺ𐓣𝗀 𝚰𝗌 𝐀ᑲⱺυ𝗍 𝐓ⱺ 𝐄𐓣ᑯ"
     else:
         bar = "𝐓ɦ𝖾 𝐒ⱺ𐓣𝗀 𝚰𝗌 𝐎𝗏𝖾𝗋"
-    
+
     buttons = [
         [
             InlineKeyboardButton(text="▷", callback_data=f"ADMIN Resume|{chat_id}"),
@@ -106,13 +105,13 @@ def stream_markup_timer(_, chat_id, played, dur):
         ],
         [
             InlineKeyboardButton(
-                text=f"{bar}",
+                text=f"{played} {ba} {dur}",
                 callback_data="GetTimer",
             )
         ],
         [
             InlineKeyboardButton(
-                text=f"{played} {ba} {dur}",
+                text=f"{bar}",
                 callback_data="GetTimer",
             )
         ],
@@ -121,7 +120,6 @@ def stream_markup_timer(_, chat_id, played, dur):
         ],
     ]
     return buttons
-
 
 def stream_markup(_, chat_id):
     buttons = [
