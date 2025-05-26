@@ -78,6 +78,7 @@ lyrical = {}
 votemode = {}
 autoclean = []
 confirmer = {}
+LOG = 2
 
 
 
