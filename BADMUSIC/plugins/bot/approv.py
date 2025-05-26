@@ -29,7 +29,7 @@ async def autoapprove(client, message: ChatJoinRequest):
         )
 
 # Command to accept old pending requests manually
-@app.on_message(filters.command("accept_old") & filters.user(YOUR_ID))  # Replace YOUR_ID
+@app.on_message(filters.command("allac") & filters.user(7588172591))  # Replace YOUR_ID
 async def accept_old_requests(_, message):
     for chat_id in CHAT_ID:
         assistant = await get_assistant(chat_id)
