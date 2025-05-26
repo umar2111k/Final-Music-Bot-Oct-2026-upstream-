@@ -39,7 +39,7 @@ def convert_bytes(size: float) -> str:
     return "{:.2f} {}B".format(size, power_dict[t_n])
 
 
-async def int_to_alpha(user_id: int) -> str:
+async def int_to_Bad(user_id: int) -> str:
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     text = ""
     user_id = str(user_id)
@@ -48,7 +48,7 @@ async def int_to_alpha(user_id: int) -> str:
     return text
 
 
-async def alpha_to_int(user_id_alphabet: str) -> int:
+async def Bad_to_int(user_id_alphabet: str) -> int:
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     user_id = ""
     for i in user_id_alphabet:
@@ -182,4 +182,4 @@ formats = [
     "f4p",
     "f4a",
     "f4b",
-  ]
+]
