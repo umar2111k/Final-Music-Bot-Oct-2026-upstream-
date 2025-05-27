@@ -43,7 +43,7 @@ def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_
     text_width, _ = font.getsize(text)
     if text_width <= box_width:
         return text, font
-    # Truncate and add ...
+    # If still not fitting, truncate and add ...
     for i in range(len(text), 0, -1):
         truncated = text[:i] + "..."
         font = get_fitting_font(font_path, truncated, box_width, max_font_size, min_font_size)
@@ -185,19 +185,12 @@ async def get_thumb(videoid: str) -> str:
 
     # BADMUSIC label
     draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
-
-    # Title - dynamically fit in box, truncate if needed
+    # Title (dynamic sized font and truncation now)
     title_box_x = 285
     title_box_y = 200
-    title_box_width = 230  # box width for title text
-    # Use full font path for fitting/truncating
-    title_font_path = "BADMUSIC/assets/font.ttf"
-
-    safe_title, fitting_title_font = truncate_text_to_fit(
-        title_font_path, title, title_box_width, max_font_size=20, min_font_size=10
-    )
+    title_box_width = 230  # max width for title
+    safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=20, min_font_size=12)
     draw.text((title_box_x, title_box_y), safe_title, (255, 255, 255), font=fitting_title_font)
-
     # Channel
     draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
     # Duration
