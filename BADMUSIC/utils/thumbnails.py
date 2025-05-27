@@ -189,7 +189,7 @@ async def get_thumb(videoid: str) -> str:
     title_box_x = 285
     title_box_y = 200
     title_box_width = 230  # max width for title
-    safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=16, min_font_size=10)
+    safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=10, min_font_size=5)
     draw.text((title_box_x, title_box_y), safe_title, (255, 255, 255), font=fitting_title_font)
     # Channel
     draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
