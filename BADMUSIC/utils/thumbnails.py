@@ -1,77 +1,119 @@
-import os, re, random, aiofiles, aiohttp, math
+import os
+import re
+import random
+import math
+import asyncio
+from io import BytesIO
+
+import aiofiles
+import aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from youtubesearchpython.__future__ import VideosSearch
-from BADMUSIC import app
 from config import YOUTUBE_IMG_URL
 
-# Load fonts once (optimization)
-arial = ImageFont.truetype("BADMUSIC/assets/font2.ttf", 30)
-font = ImageFont.truetype("BADMUSIC/assets/font.ttf", 30)
-title_font = ImageFont.truetype("BADMUSIC/assets/font3.ttf", 45)
+# ---- FONTS ----
+FONTS = {
+    "cfont": ImageFont.truetype("BADMUSIC/assets/cfont.ttf", 15),
+    "dfont": ImageFont.truetype("BADMUSIC/assets/font2.otf", 12),
+    "nfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 10),
+    "tfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 20),
+    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 45),
+    "arial": ImageFont.truetype("BADMUSIC/assets/font2.ttf", 30),
+    "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
+}
 
-def changeImageSize(maxWidth, maxHeight, image):
-    widthRatio = maxWidth / image.size[0]
-    heightRatio = maxHeight / image.size[1]
-    newWidth = int(widthRatio * image.size[0])
-    newHeight = int(heightRatio * image.size[1])
-    return image.resize((newWidth, newHeight))
+# ---- IMAGE HELPERS ----
 
-def truncate(text):
-    words = text.split(" ")
-    text1, text2 = "", ""
-    for word in words:
-        if len(text1) + len(word) < 30:
-            text1 += " " + word
-        elif len(text2) + len(word) < 30:
-            text2 += " " + word
-    return [text1.strip(), text2.strip()]
+def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
+    target_size = 640
+    aspect_ratio = img.width / img.height
+    if aspect_ratio > 1:
+        new_width = int(target_size * aspect_ratio)
+        new_height = target_size
+    else:
+        new_width = target_size
+        new_height = int(target_size / aspect_ratio)
+    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    left = (img.width - target_size) // 2
+    top = (img.height - target_size) // 2
+    right = left + target_size
+    bottom = top + target_size
+    return img.crop((left, top, right, bottom))
 
-def generate_light_dark_color():
-    return (random.randint(100, 200), random.randint(100, 200), random.randint(100, 200))
+def clean_text(text: str, limit: int = 17) -> str:
+    text = text.strip()
+    return f"{text[:limit - 3]}..." if len(text) > limit else text
 
-def create_rgb_neon_circle(image, center, radius, border_width, steps=30):
-    draw = ImageDraw.Draw(image)
-    for step in range(steps):
-        red = int((math.sin(step / steps * math.pi * 2) * 127) + 128)
-        green = int((math.sin((step / steps * math.pi * 2) + (math.pi / 3)) * 127) + 128)
-        blue = int((math.sin((step / steps * math.pi * 2) + (math.pi * 2 / 3)) * 127) + 128)
-        draw.ellipse([
-            center[0] - radius - border_width + step,
-            center[1] - radius - border_width + step,
-            center[0] + radius + border_width - step,
-            center[1] + radius + border_width - step
-        ], outline=(red, green, blue), width=border_width)
-    return image
+def add_controls(img: Image.Image) -> Image.Image:
+    img = img.filter(ImageFilter.GaussianBlur(25))
+    box = (120, 120, 520, 480)
+    region = img.crop(box)
+    controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
+    dark_region = ImageEnhance.Brightness(region).enhance(0.5)
+    mask = Image.new("L", dark_region.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, box[2] - box[0], box[3] - box[1]), 40, fill=255
+    )
+    img.paste(dark_region, box, mask)
+    img.paste(controls, (135, 305), controls)
+    return img
 
-def crop_center_circle(img, output_size, border, crop_scale=1.5):
-    half_width, half_height = img.size[0] / 2, img.size[1] / 2
-    larger_size = int(output_size * crop_scale)
-    img = img.crop((
-        half_width - larger_size / 2,
-        half_height - larger_size / 2,
-        half_width + larger_size / 2,
-        half_height + larger_size / 2
-    ))
-    img = img.resize((output_size - 2 * border, output_size - 2 * border))
-    final_img = Image.new("RGBA", (output_size, output_size), "white")
-    mask_main = Image.new("L", (output_size - 2 * border, output_size - 2 * border), 0)
-    draw_main = ImageDraw.Draw(mask_main)
-    draw_main.ellipse((0, 0, output_size - 2 * border, output_size - 2 * border), fill=255)
-    final_img.paste(img, (border, border), mask_main)
-    mask_border = Image.new("L", (output_size, output_size), 0)
-    draw_border = ImageDraw.Draw(mask_border)
-    draw_border.ellipse((0, 0, output_size, output_size), fill=255)
-    result = Image.composite(final_img, Image.new("RGBA", final_img.size, (0, 0, 0, 0)), mask_border)
-    center = (output_size // 2, output_size // 2)
-    radius = (output_size - 2 * border) // 2
-    return create_rgb_neon_circle(result, center, radius, 10)
+def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
+    width, height = image.size
+    side_length = min(width, height)
+    crop = image.crop(
+        (
+            (width - side_length) // 2,
+            (height - side_length) // 2,
+            (width + side_length) // 2,
+            (height + side_length) // 2,
+        )
+    )
+    resize = crop.resize((size, size), Image.Resampling.LANCZOS)
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size, size), radius=30, fill=255)
+    rounded = ImageOps.fit(resize, (size, size))
+    rounded.putalpha(mask)
+    return rounded
 
-async def get_thumb(videoid):
-    # Check if thumbnail already exists in cache
-    if os.path.isfile(f"cache/{videoid}_v4.png"):
-        return f"cache/{videoid}_v4.png"
+def get_duration(duration: int, time: str = "0:24") -> str:
+    try:
+        m1, s1 = divmod(duration, 60)
+        m2, s2 = map(int, time.split(":"))
+        sec = (m1 * 60 + s1) - (m2 * 60 + s2)
+        _min, sec = divmod(sec, 60)
+        return f"{_min}:{sec:02d}"
+    except Exception:
+        return "0:00"
 
-    # Fetch YouTube video details
+async def fetch_image(url: str) -> Image.Image | None:
+    if not url:
+        return None
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, timeout=5) as response:
+                if response.status != 200:
+                    return None
+                data = await response.read()
+                img = Image.open(BytesIO(data)).convert("RGBA")
+                if url.startswith("https://i.ytimg.com"):
+                    img = resize_youtube_thumbnail(img)
+                return img
+        except Exception:
+            return None
+
+# ---- MAIN FUNCTION ----
+
+async def get_thumb(videoid: str) -> str:
+    """
+    Generates and saves a new styled YouTube thumbnail for the given videoid.
+    Returns the path to the generated image.
+    """
+    save_dir = f"cache/{videoid}_v5.png"
+    if os.path.isfile(save_dir):
+        return save_dir
+
+    # Fetch video details from YouTube
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = await VideosSearch(url, limit=1).next()
@@ -82,68 +124,48 @@ async def get_thumb(videoid):
         print(f"Error fetching YouTube results: {e}")
         return YOUTUBE_IMG_URL
 
-    # Extract video details
+    # Extract info
     title = re.sub("\W+", " ", result.get("title", "Unsupported Title")).title()
-    duration = result.get("duration", "Unknown Mins")
-    thumbnail = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
-    views = result.get("viewCount", {}).get("short", "Unknown Views")
     channel = result.get("channel", {}).get("name", "Unknown Channel")
-
-    # Download thumbnail
-    async with aiohttp.ClientSession() as session:
-        async with session.get(thumbnail) as resp:
-            if resp.status == 200:
-                async with aiofiles.open(f"cache/thumb{videoid}.png", mode="wb") as f:
-                    await f.write(await resp.read())
-
+    duration_str = result.get("duration", "0:00")
     try:
-        # Open downloaded thumbnail
-        youtube = Image.open(f"cache/thumb{videoid}.png")
+        # Convert duration "mm:ss" or "hh:mm:ss" to seconds
+        parts = [int(p) for p in duration_str.split(":")]
+        duration = 0
+        if len(parts) == 3:
+            duration = parts[0] * 3600 + parts[1] * 60 + parts[2]
+        elif len(parts) == 2:
+            duration = parts[0] * 60 + parts[1]
+        else:
+            duration = 0
+    except Exception:
+        duration = 0
+    thumbnail_url = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
 
-        # Resize and process image
-        image1 = changeImageSize(1280, 720, youtube)
-        image2 = image1.convert("RGBA")
-        background = image2.filter(filter=ImageFilter.BoxBlur(20))
-        enhancer = ImageEnhance.Brightness(background)
-        background = enhancer.enhance(0.6)
-        draw = ImageDraw.Draw(background)
-
-        # Add circular thumbnail with neon effect
-        circle_thumbnail = crop_center_circle(youtube, 400, 20)
-        circle_thumbnail = circle_thumbnail.resize((400, 400))
-        background.paste(circle_thumbnail, (120, 160), circle_thumbnail)
-
-        # Add text and other details
-        title1 = truncate(title)
-        draw.text((565, 180), title1[0], fill=(255, 255, 255), font=title_font)
-        draw.text((565, 230), title1[1], fill=(255, 255, 255), font=title_font)
-        draw.text((565, 320), f"{channel}  |  {views[:23]}", (255, 255, 255), font=arial)
-        draw.text((10, 10), "BAD", fill="yellow", font=font)
-
-        # Add progress bar
-        line_length = 580
-        red_length = int(line_length * 0.6)
-        draw.line([(565, 380), (565 + red_length, 380)], fill="red", width=9)
-        draw.line([(565 + red_length, 380), (565 + line_length, 380)], fill="white", width=8)
-        draw.ellipse([565 + red_length - 10, 380 - 10, 565 + red_length + 10, 380 + 10], fill="red")
-        draw.text((565, 400), "00:00", (255, 255, 255), font=arial)
-        draw.text((1080, 400), duration, (255, 255, 255), font=arial)
-
-        # Add play icons
-        play_icons = Image.open("BADMUSIC/assets/play_icons.png").resize((580, 62))
-        background.paste(play_icons, (565, 450), play_icons)
-
-        # Add stroke effect
-        stroke_width = 15
-        stroke_color = generate_light_dark_color()
-        stroke_image = Image.new("RGBA", (1280 + 2 * stroke_width, 720 + 2 * stroke_width), stroke_color)
-        stroke_image.paste(background, (stroke_width, stroke_width))
-
-        # Save and return the final thumbnail
-        os.remove(f"cache/thumb{videoid}.png")
-        stroke_image.save(f"cache/{videoid}_v4.png")
-        return f"cache/{videoid}_v4.png"
-    except Exception as e:
-        print(f"Error processing thumbnail: {e}")
+    # Download & process thumbnail
+    thumb = await fetch_image(thumbnail_url)
+    if not thumb:
         return YOUTUBE_IMG_URL
-        
+
+    # Compose background and controls
+    bg = add_controls(thumb)
+    image = make_sq(thumb)
+
+    # Paste album art
+    paste_x, paste_y = 145, 155
+    bg.paste(image, (paste_x, paste_y), image)
+
+    # Draw text
+    draw = ImageDraw.Draw(bg)
+    # Title, Channel, etc.
+    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
+    draw.text((285, 200), clean_text(title, 32), (255, 255, 255), font=FONTS["tfont"])
+    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
+
+    # Save image
+    bg.save(save_dir)
+    return save_dir
+
+# Example usage:
+# path = await get_thumb("dQw4w9WgXcQ")
