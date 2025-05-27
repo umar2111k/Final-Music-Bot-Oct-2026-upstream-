@@ -91,7 +91,7 @@ def crop_center_circle(img, output_size, border, crop_scale=1.4):
     radius = (output_size - 2 * border) // 2
     return create_rgb_neon_circle(result, center, radius, 15)
 
-async def gen_thumb(videoid):
+async def get_thumb(videoid):
     """
     Generate a vibrant YouTube thumbnail in BADMUSIC/assets style.
     Returns path to saved image.
