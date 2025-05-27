@@ -22,7 +22,18 @@ FONTS = {
     "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
 }
 
-# ---- IMAGE HELPERS ----
+def get_fitting_font(font_path, text, box_width, max_font_size=30, min_font_size=12):
+    """
+    Dynamically adjust font size to fit text within the given box width.
+    """
+    font_size = max_font_size
+    while font_size >= min_font_size:
+        font = ImageFont.truetype(font_path, font_size)
+        text_width, _ = font.getsize(text)
+        if text_width <= box_width:
+            return font
+        font_size -= 1
+    return ImageFont.truetype(font_path, min_font_size)
 
 def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
     target_size = 640
@@ -102,8 +113,6 @@ async def fetch_image(url: str) -> Image.Image | None:
         except Exception:
             return None
 
-# ---- MAIN FUNCTION ----
-
 async def get_thumb(videoid: str) -> str:
     """
     Generates and saves a new styled YouTube thumbnail for the given videoid.
@@ -125,11 +134,10 @@ async def get_thumb(videoid: str) -> str:
         return YOUTUBE_IMG_URL
 
     # Extract info
-    title = re.sub("\W+", " ", result.get("title", "Unsupported Title")).title()
+    title = re.sub(r"\W+", " ", result.get("title", "Unsupported Title")).title()
     channel = result.get("channel", {}).get("name", "Unknown Channel")
     duration_str = result.get("duration", "0:00")
     try:
-        # Convert duration "mm:ss" or "hh:mm:ss" to seconds
         parts = [int(p) for p in duration_str.split(":")]
         duration = 0
         if len(parts) == 3:
@@ -157,13 +165,21 @@ async def get_thumb(videoid: str) -> str:
 
     # Draw text
     draw = ImageDraw.Draw(bg)
-    # Title, Channel, etc.
+
+    # BADMUSIC label
     draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
-    draw.text((285, 200), clean_text(title, 32), (255, 255, 255), font=FONTS["tfont"])
+    # Title (dynamic sized font)
+    # Box for title: starting at (285, 200), max width around 230 px (from 285 to ~515)
+    title_box_x = 285
+    title_box_y = 200
+    title_box_width = 230
+    fitting_title_font = get_fitting_font("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=20, min_font_size=12)
+    draw.text((title_box_x, title_box_y), title, (255, 255, 255), font=fitting_title_font)
+    # Channel
     draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+    # Duration
     draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
 
-    # Save image
     bg.save(save_dir)
     return save_dir
 
