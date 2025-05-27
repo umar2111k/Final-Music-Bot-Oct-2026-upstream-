@@ -22,7 +22,7 @@ FONTS = {
     "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
 }
 
-def get_fitting_font(font_path, text, box_width, max_font_size=30, min_font_size=12):
+def get_fitting_font(font_path, text, box_width, max_font_size=20, min_font_size=10):
     """
     Dynamically adjust font size to fit text within the given box width.
     """
@@ -35,7 +35,7 @@ def get_fitting_font(font_path, text, box_width, max_font_size=30, min_font_size
         font_size -= 1
     return ImageFont.truetype(font_path, min_font_size)
 
-def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_size=12):
+def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_size=10):
     """
     Truncate and resize the text so it fits in the box.
     """
@@ -43,7 +43,7 @@ def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_
     text_width, _ = font.getsize(text)
     if text_width <= box_width:
         return text, font
-    # If still not fitting, truncate and add ...
+    # Truncate and add ...
     for i in range(len(text), 0, -1):
         truncated = text[:i] + "..."
         font = get_fitting_font(font_path, truncated, box_width, max_font_size, min_font_size)
@@ -185,12 +185,19 @@ async def get_thumb(videoid: str) -> str:
 
     # BADMUSIC label
     draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
-    # Title (dynamic sized font and truncation now)
+
+    # Title - dynamically fit in box, truncate if needed
     title_box_x = 285
     title_box_y = 200
-    title_box_width = 230  # max width for title
-    safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=20, min_font_size=12)
+    title_box_width = 230  # box width for title text
+    # Use full font path for fitting/truncating
+    title_font_path = "BADMUSIC/assets/font.ttf"
+
+    safe_title, fitting_title_font = truncate_text_to_fit(
+        title_font_path, title, title_box_width, max_font_size=20, min_font_size=10
+    )
     draw.text((title_box_x, title_box_y), safe_title, (255, 255, 255), font=fitting_title_font)
+
     # Channel
     draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
     # Duration
