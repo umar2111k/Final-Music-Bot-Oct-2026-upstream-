@@ -697,17 +697,16 @@ class Call(PyTgCalls):
                 return
             await self.change_stream(client, update.chat_id)
 
+        @self.one.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.two.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.three.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.four.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.five.on_event(GroupCallParticipantJoined)(user_joined_handler)
 
-       @self.one.on_event(GroupCallParticipantJoined)(user_joined_handler)
-       @self.two.on_event(GroupCallParticipantJoined)(user_joined_handler)
-       @self.three.on_event(GroupCallParticipantJoined)(user_joined_handler)
-       @self.four.on_event(GroupCallParticipantJoined)(user_joined_handler)
-       @self.five.on_event(GroupCallParticipantJoined)(user_joined_handler)
-
-       @self.one.on_event(GroupCallParticipantLeft)(user_left_handler)
-       @self.two.on_event(GroupCallParticipantLeft)(user_left_handler)
-       @self.three.on_event(GroupCallParticipantLeft)(user_left_handler)
-       @self.four.on_event(GroupCallParticipantLeft)(user_left_handler)
-       @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.one.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.two.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.three.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.four.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
 
 Bad = Call()
