@@ -707,6 +707,6 @@ class Call(PyTgCalls):
         @self.two.on_event(GroupCallParticipantLeft)(user_left_handler)
         @self.three.on_event(GroupCallParticipantLeft)(user_left_handler)
         @self.four.on_event(GroupCallParticipantLeft)(user_left_handler)
-        @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
+                @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
 
 Bad = Call()
