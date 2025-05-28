@@ -21,6 +21,7 @@ from pytgcalls.types import (
     AudioQuality, 
     VideoQuality,
 )
+from pyrogram.enums import ChatType
 from pytgcalls.types.events import GroupCallParticipantJoined, GroupCallParticipantLeft
 from pytgcalls.types.stream import StreamAudioEnded
 
@@ -99,31 +100,38 @@ async def _clear_(chat_id):
         print(f"Error sending message: {e}")
 
 async def user_joined_handler(client, event: GroupCallParticipantJoined):
-    user = event.user
-    first_name = user.first_name or "No Name"
-    username = f"@{user.username}" if user.username else "No Username"
-    user_id = user.id
-    msg = (
-        f"👤 **User Joined VC**\n"
-        f"First Name: {first_name}\n"
-        f"Username: {username}\n"
-        f"User ID: `{user_id}`"
-    )
-    await app.send_message(event.chat_id, msg)
+    try:
+        user_id = event.participant.peer.user_id  # ✅ This is correct
+        user = await client.get_users(user_id)
+        first_name = user.first_name or "No Name"
+        username = f"@{user.username}" if user.username else "No Username"
+
+        msg = (
+            f"👤 **User Joined VC**\n"
+            f"First Name: {first_name}\n"
+            f"Username: {username}\n"
+            f"User ID: `{user.id}`"
+        )
+        await client.send_message(event.chat_id, msg)
+    except Exception as e:
+        print(f"[ERROR in user_joined_handler] - {e}")
 
 async def user_left_handler(client, event: GroupCallParticipantLeft):
-    user = event.user
-    first_name = user.first_name or "No Name"
-    username = f"@{user.username}" if user.username else "No Username"
-    user_id = user.id
-    msg = (
-        f"👋 **User Left VC**\n"
-        f"First Name: {first_name}\n"
-        f"Username: {username}\n"
-        f"User ID: `{user_id}`"
-    )
-    await app.send_message(event.chat_id, msg)
-        
+    try:
+        user_id = event.participant.peer.user_id  # ✅ Also here
+        user = await client.get_users(user_id)
+        first_name = user.first_name or "No Name"
+        username = f"@{user.username}" if user.username else "No Username"
+
+        msg = (
+            f"👋 **User Left VC**\n"
+            f"First Name: {first_name}\n"
+            f"Username: {username}\n"
+            f"User ID: `{user.id}`"
+        )
+        await client.send_message(event.chat_id, msg)
+    except Exception as e:
+        print(f"[ERROR in user_left_handler] - {e}")
 
 
 class Call(PyTgCalls):
