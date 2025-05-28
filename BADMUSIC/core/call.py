@@ -676,6 +676,18 @@ class Call(PyTgCalls):
         @self.three.on_update(filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT))
         @self.four.on_update(filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT))
         @self.five.on_update(filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT))
+
+        @self.one.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.two.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.three.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.four.on_event(GroupCallParticipantJoined)(user_joined_handler)
+        @self.five.on_event(GroupCallParticipantJoined)(user_joined_handler)
+
+        @self.one.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.two.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.three.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.four.on_event(GroupCallParticipantLeft)(user_left_handler)
+        @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
         
             
         @self.one.on_update(filters.chat_update(ChatUpdate.Status.LEFT_GROUP))
@@ -696,17 +708,5 @@ class Call(PyTgCalls):
             if not isinstance(update, StreamAudioEnded):
                 return
             await self.change_stream(client, update.chat_id)
-
-        @self.one.on_event(GroupCallParticipantJoined)(user_joined_handler)
-        @self.two.on_event(GroupCallParticipantJoined)(user_joined_handler)
-        @self.three.on_event(GroupCallParticipantJoined)(user_joined_handler)
-        @self.four.on_event(GroupCallParticipantJoined)(user_joined_handler)
-        @self.five.on_event(GroupCallParticipantJoined)(user_joined_handler)
-
-        @self.one.on_event(GroupCallParticipantLeft)(user_left_handler)
-        @self.two.on_event(GroupCallParticipantLeft)(user_left_handler)
-        @self.three.on_event(GroupCallParticipantLeft)(user_left_handler)
-        @self.four.on_event(GroupCallParticipantLeft)(user_left_handler)
-                @self.five.on_event(GroupCallParticipantLeft)(user_left_handler)
 
 Bad = Call()
