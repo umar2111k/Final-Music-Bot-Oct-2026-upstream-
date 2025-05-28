@@ -19,7 +19,7 @@ for tgcall in [Bad.one, Bad.two, Bad.three, Bad.four, Bad.five]:
         except Exception as e:
             LOGGER("BADMUSIC").error(f"Failed to send join message: {e}")
 
-    @tgcall.on_group_call_participant_left()
+    @tgcall.GroupCallParticipantLeft()
     async def on_participant_left(client, update: GroupCallParticipantLeft):
         user_id = update.user_id
         chat_id = update.chat_id
