@@ -21,6 +21,7 @@ from pytgcalls.types import (
     AudioQuality, 
     VideoQuality,
 )
+from pytgcalls.types.events import GroupCallParticipantJoined, GroupCallParticipantLeft
 from pytgcalls.types.stream import StreamAudioEnded
 
 import config
@@ -96,6 +97,32 @@ async def _clear_(chat_id):
         )
     except Exception as e:
         print(f"Error sending message: {e}")
+
+async def user_joined_handler(client, event: GroupCallParticipantJoined):
+    user = event.user
+    first_name = user.first_name or "No Name"
+    username = f"@{user.username}" if user.username else "No Username"
+    user_id = user.id
+    msg = (
+        f"👤 **User Joined VC**\n"
+        f"First Name: {first_name}\n"
+        f"Username: {username}\n"
+        f"User ID: `{user_id}`"
+    )
+    await app.send_message(event.chat_id, msg)
+
+async def user_left_handler(client, event: GroupCallParticipantLeft):
+    user = event.user
+    first_name = user.first_name or "No Name"
+    username = f"@{user.username}" if user.username else "No Username"
+    user_id = user.id
+    msg = (
+        f"👋 **User Left VC**\n"
+        f"First Name: {first_name}\n"
+        f"Username: {username}\n"
+        f"User ID: `{user_id}`"
+    )
+    await app.send_message(event.chat_id, msg)
         
 
 
