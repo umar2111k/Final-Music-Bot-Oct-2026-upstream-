@@ -1,10 +1,12 @@
+from pytgcalls.types import Update
 from pytgcalls.types.events import GroupCallParticipantJoined, GroupCallParticipantLeft
-from pytgcalls import filters
 from BADMUSIC import LOGGER, app
 from BADMUSIC.core.call import Bad
 
+# Multiple clients support
 for tgcall in [Bad.one, Bad.two, Bad.three, Bad.four, Bad.five]:
-    @tgcall.on_update(filters.event(GroupCallParticipantJoined))
+
+    @tgcall.on_group_call_participant_joined()
     async def on_participant_joined(client, update: GroupCallParticipantJoined):
         user_id = update.user_id
         chat_id = update.chat_id
@@ -17,7 +19,7 @@ for tgcall in [Bad.one, Bad.two, Bad.three, Bad.four, Bad.five]:
         except Exception as e:
             LOGGER("BADMUSIC").error(f"Failed to send join message: {e}")
 
-    @tgcall.on_update(filters.event(GroupCallParticipantLeft))
+    @tgcall.on_group_call_participant_left()
     async def on_participant_left(client, update: GroupCallParticipantLeft):
         user_id = update.user_id
         chat_id = update.chat_id
