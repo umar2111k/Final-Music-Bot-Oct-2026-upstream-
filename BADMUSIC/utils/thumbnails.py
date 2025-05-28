@@ -181,21 +181,24 @@ async def get_thumb(videoid: str) -> str:
     bg.paste(image, (paste_x, paste_y), image)
 
     # Draw text
-    draw = ImageDraw.Draw(bg)
+draw = ImageDraw.Draw(bg)
 
-    # BADMUSIC label
-    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
-    # Title (dynamic sized font and truncation now)
-    title_box_x = 285
-    title_box_y = 200
-    title_box_width = 230  # max width for title
-    safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=10, min_font_size=5)
-    draw.text((title_box_x, title_box_y), safe_title, (255, 255, 255), font=fitting_title_font)
-    # Channel
-    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
-    # Duration
-    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
+# BADMUSIC label
+draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
 
+# Title (fixed font size range to prevent overflow)
+title_box_x = 285
+title_box_y = 200
+title_box_width = 230  # max width for title
+safe_title, fitting_title_font = truncate_text_to_fit("BADMUSIC/assets/font.ttf", title, title_box_width, max_font_size=16, min_font_size=10)
+draw.text((title_box_x, title_box_y), safe_title, (255, 255, 255), font=fitting_title_font)
+
+# Channel
+draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+
+# Duration
+draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
+    
     bg.save(save_dir)
     return save_dir
 
