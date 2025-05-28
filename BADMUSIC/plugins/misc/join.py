@@ -3,7 +3,7 @@ from BADMUSIC import LOGGER, app, userbot
 from BADMUSIC.core.call import Bad
 from config import BANNED_USERS
 
-@Bad.on_participant_joined()
+@Bad.on_event(GroupCallParticipantJoined)
 async def on_participant_joined(client, update: GroupCallParticipantJoined):
     user_id = update.user_id
     chat_id = update.chat_id
