@@ -677,17 +677,17 @@ class Call(PyTgCalls):
         @self.four.on_update(filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT))
         @self.five.on_update(filters.chat_update(ChatUpdate.Status.CLOSED_VOICE_CHAT))
 
-        @self.one.on_update(GroupCallParticipantJoined)(user_joined_handler)
-        @self.two.on_update(GroupCallParticipantJoined)(user_joined_handler)
-        @self.three.on_update(GroupCallParticipantJoined)(user_joined_handler)
-        @self.four.on_update(GroupCallParticipantJoined)(user_joined_handler)
-        @self.five.on_update(GroupCallParticipantJoined)(user_joined_handler)
+        self.one.on_update(GroupCallParticipantJoined)(user_joined_handler)
+        self.two.on_update(GroupCallParticipantJoined)(user_joined_handler)
+        self.three.on_update(GroupCallParticipantJoined)(user_joined_handler)
+        self.four.on_update(GroupCallParticipantJoined)(user_joined_handler)
+        self.five.on_update(GroupCallParticipantJoined)(user_joined_handler)
 
-        @self.one.on_update(GroupCallParticipantLeft)(user_left_handler)
-        @self.two.on_update(GroupCallParticipantLeft)(user_left_handler)
-        @self.three.on_update(GroupCallParticipantLeft)(user_left_handler)
-        @self.four.on_update(GroupCallParticipantLeft)(user_left_handler)
-        @self.five.on_update(GroupCallParticipantLeft)(user_left_handler)
+        self.one.on_update(GroupCallParticipantLeft)(user_left_handler)
+        self.two.on_update(GroupCallParticipantLeft)(user_left_handler)
+        self.three.on_update(GroupCallParticipantLeft)(user_left_handler)
+        self.four.on_update(GroupCallParticipantLeft)(user_left_handler)
+        self.five.on_update(GroupCallParticipantLeft)(user_left_handler)
         
             
         @self.one.on_update(filters.chat_update(ChatUpdate.Status.LEFT_GROUP))
