@@ -101,7 +101,7 @@ async def _clear_(chat_id):
 
 async def user_joined_handler(client, event: GroupCallParticipantJoined):
     try:
-        user_id = event.participant.peer.user_id  # ✅ This is correct
+        user_id = event.participant.user_id  # ✅ Correct
         user = await client.get_users(user_id)
         first_name = user.first_name or "No Name"
         username = f"@{user.username}" if user.username else "No Username"
@@ -118,7 +118,7 @@ async def user_joined_handler(client, event: GroupCallParticipantJoined):
 
 async def user_left_handler(client, event: GroupCallParticipantLeft):
     try:
-        user_id = event.participant.peer.user_id  # ✅ Also here
+        user_id = event.participant.user_id  # ✅ Correct
         user = await client.get_users(user_id)
         first_name = user.first_name or "No Name"
         username = f"@{user.username}" if user.username else "No Username"
@@ -132,8 +132,7 @@ async def user_left_handler(client, event: GroupCallParticipantLeft):
         await client.send_message(event.chat_id, msg)
     except Exception as e:
         print(f"[ERROR in user_left_handler] - {e}")
-
-
+        
 class Call(PyTgCalls):
     def __init__(self):
         self.userbot1 = Client(
