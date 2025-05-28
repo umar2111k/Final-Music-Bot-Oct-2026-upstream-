@@ -24,7 +24,7 @@ for tgcall in [Bad.one, Bad.two, Bad.three, Bad.four, Bad.five]:
         user_id = update.user_id
         chat_id = update.chat_id
         LOGGER("BADMUSIC").info(f"❌ User {user_id} left VC in {chat_id}")
-        try
+        try:
             await app.send_message(
                 chat_id,
                 f"❌ User [{user_id}](tg://user?id={user_id}) left the voice chat."
