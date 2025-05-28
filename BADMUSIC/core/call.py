@@ -22,6 +22,7 @@ from pytgcalls.types import (
     VideoQuality,
 )
 from pyrogram.enums import ChatType
+from pytgcalls.filters import group_call_participant_joined, group_call_participant_left
 from pytgcalls.types.events import GroupCallParticipantJoined, GroupCallParticipantLeft
 from pytgcalls.types.stream import StreamAudioEnded
 
