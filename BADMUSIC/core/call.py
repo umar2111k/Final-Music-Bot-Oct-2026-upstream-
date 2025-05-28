@@ -100,10 +100,22 @@ async def _clear_(chat_id):
     except Exception as e:
         print(f"Error sending message: {e}")
 
+# --- FIX 1: Never store non-serializable objects in MongoDB ---
+
+def to_serializable(data):
+    # Remove or convert any unserializable objects here
+    if isinstance(data, dict):
+        return {k: to_serializable(v) for k, v in data.items() if not isinstance(v, (ChatUpdate,))}
+    if isinstance(data, list):
+        return [to_serializable(i) for i in data if not isinstance(i, (ChatUpdate,))]
+    return data
+
 async def user_joined_handler(client, event: GroupCallParticipantJoined):
     try:
-        user_id = event.participant.user_id  # ✅ Correct
-        user = await client.get_users(user_id)
+        # FIX 2: Ensure correct client is used for get_users
+        pyrogram_client = getattr(client, '_client', client)
+        user_id = event.participant.user_id
+        user = await pyrogram_client.get_users(user_id)
         first_name = user.first_name or "No Name"
         username = f"@{user.username}" if user.username else "No Username"
 
@@ -113,14 +125,16 @@ async def user_joined_handler(client, event: GroupCallParticipantJoined):
             f"Username: {username}\n"
             f"User ID: `{user.id}`"
         )
-        await client.send_message(event.chat_id, msg)
+        await pyrogram_client.send_message(event.chat_id, msg)
     except Exception as e:
         print(f"[ERROR in user_joined_handler] - {e}")
 
 async def user_left_handler(client, event: GroupCallParticipantLeft):
     try:
-        user_id = event.participant.user_id  # ✅ Correct
-        user = await client.get_users(user_id)
+        # FIX 2: Ensure correct client is used for get_users
+        pyrogram_client = getattr(client, '_client', client)
+        user_id = event.participant.user_id
+        user = await pyrogram_client.get_users(user_id)
         first_name = user.first_name or "No Name"
         username = f"@{user.username}" if user.username else "No Username"
 
@@ -130,7 +144,7 @@ async def user_left_handler(client, event: GroupCallParticipantLeft):
             f"Username: {username}\n"
             f"User ID: `{user.id}`"
         )
-        await client.send_message(event.chat_id, msg)
+        await pyrogram_client.send_message(event.chat_id, msg)
     except Exception as e:
         print(f"[ERROR in user_left_handler] - {e}")
         
