@@ -72,35 +72,53 @@ def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
 def clean_text(text: str, limit: int = 17) -> str:
     return f"{text.strip()[:limit - 3]}..." if len(text.strip()) > limit else text.strip()
 
-def add_controls(img: Image.Image) -> Image.Image:
-    """Add blur and overlay controls to thumbnail background."""
+def add_controls(img: Image.Image, artist_img: Image.Image, song_name: str, channel_name: str) -> Image.Image:
+    """Add blur and overlay controls + artist + song info to thumbnail background."""
     img = img.filter(ImageFilter.GaussianBlur(25))
     
     controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
     ctrl_w, ctrl_h = controls.size
 
-    # Center coordinates for box same as PNG
+    # Center coordinates for box
     center_x = img.width // 2
     center_y = img.height // 2
     left = center_x - ctrl_w // 2
     top = center_y - ctrl_h // 2
     right = left + ctrl_w
     bottom = top + ctrl_h
-
     box = (left, top, right, bottom)
-    
-    # Crop, darken, round mask
+
+    # Crop region, darken and mask
     region = img.crop(box)
     dark_region = ImageEnhance.Brightness(region).enhance(0.5)
     mask = Image.new("L", dark_region.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, ctrl_w, ctrl_h), 40, fill=255)
-
     img.paste(dark_region, box, mask)
 
-    # Paste controls PNG at center
-    img.paste(controls, (left, top), controls)
-    return img
+    # Paste artist image (left top corner inside box)
+    artist_resized = artist_img.resize((90, 90)).convert("RGBA")
+    artist_pos = (left + 20, top + 20)
+    img.paste(artist_resized, artist_pos, artist_resized)
 
+    # Text section (right of artist)
+    draw = ImageDraw.Draw(img)
+    font_bold = ImageFont.truetype("BADMUSIC/assets/font.ttf", 26)
+    font_song = ImageFont.truetype("BADMUSIC/assets/font2.otf", 22)
+    font_channel = ImageFont.truetype("BADMUSIC/assets/font2.otf", 18)
+
+    text_x = artist_pos[0] + artist_resized.width + 20
+    text_y = artist_pos[1]
+
+    draw.text((text_x, text_y), "BAD MUSIC", font=font_bold, fill="white")
+    draw.text((text_x, text_y + 32), song_name, font=font_song, fill="white")
+    draw.text((text_x, text_y + 62), channel_name, font=font_channel, fill="lightgray")
+
+    # Paste thumb.png at center bottom of box
+    thumb_pos_x = center_x - ctrl_w // 2
+    thumb_pos_y = bottom - controls.height - 10
+    img.paste(controls, (thumb_pos_x, thumb_pos_y), controls)
+
+    return img
 
 def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
     """Make square rounded album art image."""
@@ -138,7 +156,6 @@ async def fetch_image(url: str) -> Image.Image | None:
     except Exception:
         return None
 
-
 async def get_thumb(videoid: str) -> str:
     save_path = f"cache/{videoid}_v5.png"
     if os.path.exists(save_path):
@@ -153,50 +170,20 @@ async def get_thumb(videoid: str) -> str:
 
     title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
     channel = result.get("channel", {}).get("name", "Unknown Channel")
-    duration_str = result.get("duration", "0:00")
-    parts = list(map(int, duration_str.split(":")))
-    duration = sum(part * 60 ** i for i, part in enumerate(reversed(parts)))
     thumbnail_url = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
 
     thumb = await fetch_image(thumbnail_url)
     if not thumb:
         return YOUTUBE_IMG_URL
 
-    bg = add_controls(thumb)
-    draw = ImageDraw.Draw(bg)
+    # Background blur
+    bg = thumb.copy()
 
-    # Make square album art (left side)
-    art = make_sq(thumb, size=180)
-    art_pos = (60, (bg.height - art.height) // 2)  # Left margin 60 px, vertically center
-    bg.paste(art, art_pos, art)
+    # Artist art
+    artist_img = make_sq(thumb, size=100)
 
-    center_x = bg.width // 2
-
-    # Title (top center)
-    safe_title, font_title = truncate_text_to_fit(
-        "BADMUSIC/assets/font.ttf", title, box_width=600, max_font_size=28, min_font_size=14
-    )
-    title_size = font_title.getsize(safe_title)
-    title_x = center_x - title_size[0] // 2
-    title_y = 50
-    draw.text((title_x, title_y), safe_title, (255, 255, 255), font=font_title)
-
-    # Channel and Duration on the right side of album art (vertical stack)
-    right_x = art_pos[0] + art.width + 30  # 30 px gap from album art
-
-    # Channel Name
-    channel_text = clean_text(channel, 30)
-    font_channel = get_fitting_font("BADMUSIC/assets/font2.otf", channel_text, 350, 20, 12)
-    channel_size = font_channel.getsize(channel_text)
-    channel_y = (bg.height - channel_size[1] * 2 - 10) // 2  # leave 10 px gap between channel and duration
-    draw.text((right_x, channel_y), channel_text, (200, 200, 200), font=font_channel)
-
-    # Duration below channel
-    duration_text = get_duration(duration)
-    font_duration = get_fitting_font("BADMUSIC/assets/font2.otf", duration_text, 350, 20, 12)
-    dur_size = font_duration.getsize(duration_text)
-    duration_y = channel_y + channel_size[1] + 10
-    draw.text((right_x, duration_y), duration_text, (192, 192, 192), font=font_duration)
+    # Add everything in box
+    bg = add_controls(bg, artist_img, clean_text(title, 35), clean_text(channel, 25))
 
     os.makedirs("cache", exist_ok=True)
     bg.save(save_path)
