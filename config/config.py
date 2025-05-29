@@ -27,6 +27,10 @@ OWNER_ID = int(getenv("OWNER_ID", None))
 # Cookies # https://batbin.me
 COOKIES = getenv("COOKIES", "https://batbin.me/donum")
 
+
+# Set it true if you want your bot to be private only [You'll need to allow CHAT_ID via /authorize command then only your bot will play music in that chat.]
+PRIVATE_BOT_MODE = strtobool(getenv("PRIVATE_BOT_MODE", "False"))
+
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
 HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
