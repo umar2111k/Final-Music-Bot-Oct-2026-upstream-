@@ -24,6 +24,9 @@ LOGGER_ID = int(getenv("LOGGER_ID", "0"))
 # Get this value from @MissRose_bot on Telegram by /id
 OWNER_ID = int(getenv("OWNER_ID", None))
 
+# Cookies # https://batbin.me
+COOKIES = getenv("COOKIES", "https://batbin.me/")
+
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
 HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
