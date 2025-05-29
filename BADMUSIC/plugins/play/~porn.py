@@ -59,11 +59,14 @@ async def stream_xxnx_to_vc(client, message: Message):
         return
 
     try:
-        # Use the correct stream method from BADMUSIC.utils.stream.stream
+        # Fill all required arguments for the stream function
         await stream(
-            message.chat.id,       # Chat ID (group id)
-            stream_url,            # Direct stream URL
-            video=True             # video=True for streaming video, audio=False for audio only
+            user_id=message.from_user.id if message.from_user else 0,
+            result=stream_url,
+            chat_id=message.chat.id,
+            user_name=message.from_user.first_name if message.from_user else "User",
+            original_chat_id=message.chat.id,
+            video=True  # If your stream function accepts 'video'
         )
         await mystic.edit_text(
             f"✅ Now playing: `{query}` in VC!\n[Watch Video]({video_url})",
