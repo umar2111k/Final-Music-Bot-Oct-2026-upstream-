@@ -131,14 +131,11 @@ async def fetch_image(url: str) -> Image.Image | None:
 
 
 async def get_thumb(videoid: str) -> str:
-    """
-    Generates a styled YouTube thumbnail.
-    """
     save_path = f"cache/{videoid}_v5.png"
     if os.path.exists(save_path):
         return save_path
 
-    # Fetch YouTube video data
+    # YouTube data fetch
     try:
         results = await VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1).next()
         result = results.get("result", [{}])[0]
@@ -156,31 +153,35 @@ async def get_thumb(videoid: str) -> str:
     if not thumb:
         return YOUTUBE_IMG_URL
 
-    # With:
     bg = add_controls(thumb)
-
-    art = make_sq(thumb)
-    bg.paste(art, (145, 155), art)
-
     draw = ImageDraw.Draw(bg)
-    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
+
+    # Square art
+    art = make_sq(thumb, size=180)
+    art_pos = ((bg.width - art.width) // 2, 160)
+    bg.paste(art, art_pos, art)
+
+    center_x = bg.width // 2
 
     # Title
-    safe_title, font = truncate_text_to_fit(
-        "BADMUSIC/assets/font.ttf", title, box_width=230, max_font_size=16, min_font_size=10
+    safe_title, font_title = truncate_text_to_fit(
+        "BADMUSIC/assets/font.ttf", title, box_width=600, max_font_size=28, min_font_size=14
     )
-    draw.text((285, 200), safe_title, (255, 255, 255), font=font)
+    title_size = font_title.getsize(safe_title)
+    draw.text((center_x - title_size[0] // 2, art_pos[1] + 200), safe_title, (255, 255, 255), font=font_title)
 
-    # Channel name
-    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+    # Channel
+    channel_text = clean_text(channel, 30)
+    font_channel = get_fitting_font("BADMUSIC/assets/font2.otf", channel_text, 600, 20, 12)
+    channel_size = font_channel.getsize(channel_text)
+    draw.text((center_x - channel_size[0] // 2, art_pos[1] + 240), channel_text, (200, 200, 200), font=font_channel)
 
     # Duration
-    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
+    duration_text = get_duration(duration)
+    font_duration = get_fitting_font("BADMUSIC/assets/font2.otf", duration_text, 200, 20, 12)
+    dur_size = font_duration.getsize(duration_text)
+    draw.text((center_x - dur_size[0] // 2, art_pos[1] + 280), duration_text, (192, 192, 192), font=font_duration)
 
     os.makedirs("cache", exist_ok=True)
     bg.save(save_path)
     return save_path
-    
-
-# Example usage for testing (in async function):
-# path = await get_thumb("dQw4w9WgXcQ")
