@@ -1,8 +1,7 @@
 from pyrogram import filters
 from pyrogram.types import Message
 from BADMUSIC import app
-from BADMUSIC.core.call import Bad  # Must be an instance, not class!
-from pytgcalls.exceptions import NoActiveGroupCall
+from BADMUSIC.utils.stream.stream import stream  # Use the correct stream function
 from yt_dlp import YoutubeDL
 from bs4 import BeautifulSoup
 import random
@@ -60,14 +59,16 @@ async def stream_xxnx_to_vc(client, message: Message):
         return
 
     try:
-        # FIX: Only pass the stream_url (not chat_id)
-        await Bad.stream_call(stream_url)
+        # Use the correct stream method from BADMUSIC.utils.stream.stream
+        await stream(
+            message.chat.id,       # Chat ID (group id)
+            stream_url,            # Direct stream URL
+            video=True             # video=True for streaming video, audio=False for audio only
+        )
         await mystic.edit_text(
             f"✅ Now playing: `{query}` in VC!\n[Watch Video]({video_url})",
             disable_web_page_preview=True
         )
-    except NoActiveGroupCall:
-        await mystic.edit_text("⚠️ No active group call! Start a VC first.")
     except Exception as e:
         await mystic.edit_text(f"❌ Error: `{type(e).__name__}` - {e}")
 
