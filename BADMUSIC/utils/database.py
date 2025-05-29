@@ -16,6 +16,7 @@ countdb = mongodb.upcount
 gbansdb = mongodb.gban
 langdb = mongodb.language
 onoffdb = mongodb.onoffper
+commanddb = mongodb.commands
 playmodedb = mongodb.playmode
 playtypedb = mongodb.playtypedb
 skipdb = mongodb.skipmode
@@ -37,6 +38,26 @@ pause = {}
 playmode = {}
 playtype = {}
 skipmode = {}
+
+# Define file paths
+CLEANMODE_DB = os.path.join(config.TEMP_DB_FOLDER, "cleanmode.json")
+COMMAND_DB = os.path.join(config.TEMP_DB_FOLDER, "command.json")
+def load_cleanmode():
+    if os.path.exists(CLEANMODE_DB):
+        with open(CLEANMODE_DB, "r") as file:
+            return json.load(file)
+    return []
+
+
+def load_command():
+    if os.path.exists(COMMAND_DB):
+        with open(COMMAND_DB, "r") as file:
+            return json.load(file)
+    return []
+
+
+cleanmode = load_cleanmode()
+command = load_command()
 
 
 async def get_assistant_number(chat_id: int) -> str:
