@@ -83,9 +83,15 @@ def add_controls(img: Image.Image) -> Image.Image:
     mask = Image.new("L", dark_region.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, box[2] - box[0], box[3] - box[1]), 40, fill=255)
 
-
     img.paste(dark_region, box, mask)
-    img.paste(controls, (135, 305), controls)
+
+    # Calculate center position for controls image
+    ctrl_w, ctrl_h = controls.size
+    center_x = (img.width - ctrl_w) // 2
+    center_y = (img.height - ctrl_h) // 2
+
+    # Paste controls image at center
+    img.paste(controls, (center_x, center_y), controls)
     return img
 
 
@@ -112,6 +118,18 @@ def get_duration(duration: int, time: str = "0:24") -> str:
         return f"{_min}:{sec:02d}"
     except Exception:
         return "0:00"
+
+
+async def fetch_image(url: str) -> Image.Image | None:
+    """Fetch image from URL asynchronously."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+                    return Image.open(BytesIO(data)).convert("RGBA")
+    except Exception:
+        return None
 
 
 async def get_thumb(videoid: str) -> str:
@@ -158,7 +176,6 @@ async def get_thumb(videoid: str) -> str:
 
     # Channel and Duration on the right side of album art (vertical stack)
     right_x = art_pos[0] + art.width + 30  # 30 px gap from album art
-    total_text_height = 0
 
     # Channel Name
     channel_text = clean_text(channel, 30)
