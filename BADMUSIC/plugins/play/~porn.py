@@ -9,7 +9,6 @@ import os
 import random
 import requests
 
-
 def get_video_info(title: str):
     url_base = f'https://www.xnxx.com/search/{title}'
     try:
@@ -26,7 +25,6 @@ def get_video_info(title: str):
         print(f"[ERROR] ꜱᴇᴀʀᴄʜ ꜰᴀɪʟᴇᴅ: 🥲 {e}")
     return None
 
-
 async def get_stream_link(url: str):
     try:
         ydl_opts = {
@@ -42,7 +40,6 @@ async def get_stream_link(url: str):
     except Exception as e:
         print(f"[ERROR] ʏᴛ-ᴅʟᴘ ꜱᴛʀᴇᴀᴍ ᴇxᴛʀᴀᴄᴛ:😂 {e}")
         return None
-
 
 @app.on_message(filters.command("xxnx") & filters.group)
 async def stream_porn_to_vc(_, message: Message):
@@ -61,7 +58,7 @@ async def stream_porn_to_vc(_, message: Message):
         return
 
     try:
-        await Bad.join_group_call(
+        await Bad.stream_call(
             chat_id,
             stream_url,
             stream_type="video"
