@@ -75,23 +75,30 @@ def clean_text(text: str, limit: int = 17) -> str:
 def add_controls(img: Image.Image) -> Image.Image:
     """Add blur and overlay controls to thumbnail background."""
     img = img.filter(ImageFilter.GaussianBlur(25))
-    box = (120, 120, 520, 480)
-
-    region = img.crop(box)
+    
     controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
+    ctrl_w, ctrl_h = controls.size
+
+    # Center coordinates for box same as PNG
+    center_x = img.width // 2
+    center_y = img.height // 2
+    left = center_x - ctrl_w // 2
+    top = center_y - ctrl_h // 2
+    right = left + ctrl_w
+    bottom = top + ctrl_h
+
+    box = (left, top, right, bottom)
+    
+    # Crop, darken, round mask
+    region = img.crop(box)
     dark_region = ImageEnhance.Brightness(region).enhance(0.5)
     mask = Image.new("L", dark_region.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, box[2] - box[0], box[3] - box[1]), 40, fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, ctrl_w, ctrl_h), 40, fill=255)
 
     img.paste(dark_region, box, mask)
 
-    # Calculate center position for controls image
-    ctrl_w, ctrl_h = controls.size
-    center_x = (img.width - ctrl_w) // 2
-    center_y = (img.height - ctrl_h) // 2
-
-    # Paste controls image at center
-    img.paste(controls, (center_x, center_y), controls)
+    # Paste controls PNG at center
+    img.paste(controls, (left, top), controls)
     return img
 
 
