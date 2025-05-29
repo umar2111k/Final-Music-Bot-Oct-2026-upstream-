@@ -11,6 +11,7 @@ def time_to_seconds(time):
     stringt = str(time)
     return sum(int(x) * 60**i for i, x in enumerate(reversed(stringt.split(":"))))
 
+
 async def shell_cmd(cmd):
     proc = await asyncio.create_subprocess_shell(
         cmd,
@@ -25,62 +26,21 @@ async def shell_cmd(cmd):
             return errorz.decode("utf-8")
     return out.decode("utf-8")
 
-# ======= YOUTUBE DATA API SETTINGS (for search only) =======
-YOUTUBE_API_KEY = "AIzaSyCR28l3eRvOVs5fP0m06LyfeFy8rVHS0O4"
-YOUTUBE_DATA_API_BASE = "https://www.googleapis.com/youtube/v3"
-# ===========================================================
 
-async def get_youtube_video_url(query):
-    # Uses YouTube Data API to search video and returns the YouTube URL (not a stream/download link)
-    api_url = f"{YOUTUBE_DATA_API_BASE}/search"
-    params = {
-        "part": "snippet",
-        "q": query,
-        "type": "video",
-        "key": YOUTUBE_API_KEY,
-        "maxResults": 1
-    }
+
+async def get_stream_url(query, video=False):
+    api_url = "https://www.googleapis.com/youtube/v3/search"
+    api_key = "AIzaSyCR28l3eRvOVs5fP0m06LyfeFy8rVHS0O4"
+    
     async with httpx.AsyncClient(timeout=60) as client:
+        params = {"query": query, "video": video, "api_key": api_key}
         response = await client.get(api_url, params=params)
         if response.status_code != 200:
             return ""
-        data = response.json()
-        if "items" in data and data["items"]:
-            video_id = data["items"][0]["id"]["videoId"]
-            return f"https://www.youtube.com/watch?v={video_id}"
-        else:
-            return ""
+        info = response.json()
+        return info.get("stream_url")
 
-async def get_stream_url(query, video=False):
-    # Step 1: Use YouTube Data API to get YouTube link by query
-    yt_url = await get_youtube_video_url(query)
-    if not yt_url:
-        return ""
-    # Step 2: Use yt_dlp to get direct stream/download URL
-    ydl_opts = {
-        "quiet": True,
-        "skip_download": True,
-        "format": "bestvideo+bestaudio/best" if video else "bestaudio/best",
-    }
-    loop = asyncio.get_running_loop()
-    def extract_url():
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(yt_url, download=False)
-            # Choose best format
-            if video:
-                # Get best MP4 video+audio stream
-                for fmt in info.get("formats", []):
-                    if fmt.get("ext") == "mp4" and fmt.get("url"):
-                        return fmt["url"]
-                return info.get("url")
-            else:
-                # Get best audio stream
-                for fmt in info.get("formats", []):
-                    if fmt.get("acodec") != "none" and fmt.get("vcodec") == "none":
-                        return fmt["url"]
-                return info.get("url")
-    stream_url = await loop.run_in_executor(None, extract_url)
-    return stream_url
+
 
 class YouTubeAPI:
     def __init__(self):
@@ -170,8 +130,13 @@ class YouTubeAPI:
         return thumbnail
 
     async def video(self, link: str, videoid: Union[bool, str] = None):
-        # Return direct video stream/download URL using yt_dlp (not just YouTube page link)
-        return await get_stream_url(link, video=True)
+        if videoid:
+            link = self.base + link
+        if "&" in link:
+            link = link.split("&")[0]
+            
+        return await get_stream_url(link, True)
+        
 
     async def playlist(self, link, limit, user_id, videoid: Union[bool, str] = None):
         if videoid:
@@ -360,6 +325,9 @@ class YouTubeAPI:
             fpath = f"downloads/{title}.mp3"
             return fpath
         elif video:
-            return await get_stream_url(link, video=True)
+            downloaded_file = await get_stream_url(link, True)
+            direct = None
         else:
-            return await get_stream_url(link, video=False)
+            direct = None
+            downloaded_file = await get_stream_url(link, False)
+        return downloaded_file, direct
