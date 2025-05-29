@@ -114,22 +114,6 @@ def get_duration(duration: int, time: str = "0:24") -> str:
         return "0:00"
 
 
-async def fetch_image(url: str) -> Image.Image | None:
-    """Download and return image from URL."""
-    if not url:
-        return None
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url, timeout=5) as response:
-                if response.status != 200:
-                    return None
-                data = await response.read()
-                img = Image.open(BytesIO(data)).convert("RGBA")
-                return resize_youtube_thumbnail(img) if "ytimg.com" in url else img
-        except Exception:
-            return None
-
-
 async def get_thumb(videoid: str) -> str:
     save_path = f"cache/{videoid}_v5.png"
     if os.path.exists(save_path):
@@ -156,31 +140,39 @@ async def get_thumb(videoid: str) -> str:
     bg = add_controls(thumb)
     draw = ImageDraw.Draw(bg)
 
-    # Square art
+    # Make square album art (left side)
     art = make_sq(thumb, size=180)
-    art_pos = ((bg.width - art.width) // 2, 160)
+    art_pos = (60, (bg.height - art.height) // 2)  # Left margin 60 px, vertically center
     bg.paste(art, art_pos, art)
 
     center_x = bg.width // 2
 
-    # Title
+    # Title (top center)
     safe_title, font_title = truncate_text_to_fit(
         "BADMUSIC/assets/font.ttf", title, box_width=600, max_font_size=28, min_font_size=14
     )
     title_size = font_title.getsize(safe_title)
-    draw.text((center_x - title_size[0] // 2, art_pos[1] + 200), safe_title, (255, 255, 255), font=font_title)
+    title_x = center_x - title_size[0] // 2
+    title_y = 50
+    draw.text((title_x, title_y), safe_title, (255, 255, 255), font=font_title)
 
-    # Channel
+    # Channel and Duration on the right side of album art (vertical stack)
+    right_x = art_pos[0] + art.width + 30  # 30 px gap from album art
+    total_text_height = 0
+
+    # Channel Name
     channel_text = clean_text(channel, 30)
-    font_channel = get_fitting_font("BADMUSIC/assets/font2.otf", channel_text, 600, 20, 12)
+    font_channel = get_fitting_font("BADMUSIC/assets/font2.otf", channel_text, 350, 20, 12)
     channel_size = font_channel.getsize(channel_text)
-    draw.text((center_x - channel_size[0] // 2, art_pos[1] + 240), channel_text, (200, 200, 200), font=font_channel)
+    channel_y = (bg.height - channel_size[1] * 2 - 10) // 2  # leave 10 px gap between channel and duration
+    draw.text((right_x, channel_y), channel_text, (200, 200, 200), font=font_channel)
 
-    # Duration
+    # Duration below channel
     duration_text = get_duration(duration)
-    font_duration = get_fitting_font("BADMUSIC/assets/font2.otf", duration_text, 200, 20, 12)
+    font_duration = get_fitting_font("BADMUSIC/assets/font2.otf", duration_text, 350, 20, 12)
     dur_size = font_duration.getsize(duration_text)
-    draw.text((center_x - dur_size[0] // 2, art_pos[1] + 280), duration_text, (192, 192, 192), font=font_duration)
+    duration_y = channel_y + channel_size[1] + 10
+    draw.text((right_x, duration_y), duration_text, (192, 192, 192), font=font_duration)
 
     os.makedirs("cache", exist_ok=True)
     bg.save(save_path)
