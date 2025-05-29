@@ -25,7 +25,7 @@ LOGGER_ID = int(getenv("LOGGER_ID", "0"))
 OWNER_ID = int(getenv("OWNER_ID", None))
 
 # Cookies # https://batbin.me
-COOKIES = getenv("COOKIES", "https://batbin.me/")
+COOKIES = getenv("COOKIES", "https://batbin.me/donum")
 
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
