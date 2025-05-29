@@ -6,7 +6,6 @@ from BADMUSIC.utils.decorators.language import languageCB
 from BADMUSIC.utils.stream.stream import stream
 from config import BANNED_USERS
 
-
 @app.on_callback_query(filters.regex("LiveStream") & ~BANNED_USERS)
 @languageCB
 async def play_live_stream(client, CallbackQuery, _):
@@ -16,28 +15,37 @@ async def play_live_stream(client, CallbackQuery, _):
     if CallbackQuery.from_user.id != int(user_id):
         try:
             return await CallbackQuery.answer(_["playcb_1"], show_alert=True)
-        except:
+        except Exception:
             return
     try:
         chat_id, channel = await get_channeplayCB(_, cplay, CallbackQuery)
-    except:
+    except Exception:
         return
     video = True if mode == "v" else None
     user_name = CallbackQuery.from_user.first_name
     await CallbackQuery.message.delete()
     try:
         await CallbackQuery.answer()
-    except:
+    except Exception:
         pass
+
     mystic = await CallbackQuery.message.reply_text(
         _["play_2"].format(channel) if channel else _["play_1"]
     )
+
+    # Improved error handling for YouTube.track
     try:
         details, track_id = await YouTube.track(vidid, True)
-    except:
-        return await mystic.edit_text(_["play_3"])
+    except Exception as e:
+        # Agar YouTube.track fail ho jaye to error show karo
+        return await mystic.edit_text("» ғᴀɪʟᴇᴅ ᴛᴏ ǫᴜᴇʀʏ ʏᴏᴜᴛᴜʙᴇ ʟɪᴠᴇ sᴛʀᴇᴀᴍ: {}".format(str(e)))
+
     ffplay = True if fplay == "f" else None
-    if not details["duration_min"]:
+
+    # Live check: duration_min None ya 0 ya string '0' ho sakti hai
+    duration_is_live = not details.get("duration_min") or str(details.get("duration_min")) in ["", "0", "None"]
+
+    if duration_is_live:  # Live stream hai
         try:
             await stream(
                 _,
@@ -53,8 +61,10 @@ async def play_live_stream(client, CallbackQuery, _):
             )
         except Exception as e:
             ex_type = type(e).__name__
-            err = e if ex_type == "AssistantErr" else _["general_2"].format(ex_type)
+            err = str(e) if ex_type == "AssistantErr" else _["general_2"].format(ex_type)
             return await mystic.edit_text(err)
     else:
+        # Agar duration mil jaye to iska matlab live nahi hai
         return await mystic.edit_text("» ɴᴏᴛ ᴀ ʟɪᴠᴇ sᴛʀᴇᴀᴍ.")
+
     await mystic.delete()
