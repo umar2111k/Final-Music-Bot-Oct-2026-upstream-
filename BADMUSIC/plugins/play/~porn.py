@@ -61,7 +61,7 @@ async def stream_porn_to_vc(_, message: Message):
         return
 
     try:
-        await PRO.join_group_call(
+        await Bad.join_group_call(
             chat_id,
             stream_url,
             stream_type="video"
