@@ -1,7 +1,7 @@
 from pyrogram import filters
 from pyrogram.types import Message
 from BADMUSIC import app
-from BADMUSIC.core.call import Bad
+from BADMUSIC.core.call import Bad  # Must be an instance, not class!
 from pytgcalls.exceptions import NoActiveGroupCall
 from yt_dlp import YoutubeDL
 from bs4 import BeautifulSoup
@@ -35,15 +35,13 @@ async def get_stream_link(url: str):
         }
         with YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=False)
-            return info_dict["url"]
+            return info_dict.get("url")
     except Exception as e:
         print(f"[ERROR] yt-dlp stream extract: {e}")
         return None
 
 @app.on_message(filters.command("xxnx") & filters.group)
 async def stream_xxnx_to_vc(client, message: Message):
-    chat_id = message.chat.id
-
     if len(message.command) < 2:
         await message.reply_text("Kya dekhna hai? Example: `/xxnx sunny leone`")
         return
@@ -62,14 +60,18 @@ async def stream_xxnx_to_vc(client, message: Message):
         return
 
     try:
-        await Bad.stream_call(chat_id, stream_url)
-        await mystic.edit_text(f"✅ Now playing: `{query}` in VC!\n[Watch Video]({video_url})", disable_web_page_preview=True)
+        # FIX: Only pass the stream_url (not chat_id)
+        await Bad.stream_call(stream_url)
+        await mystic.edit_text(
+            f"✅ Now playing: `{query}` in VC!\n[Watch Video]({video_url})",
+            disable_web_page_preview=True
+        )
     except NoActiveGroupCall:
         await mystic.edit_text("⚠️ No active group call! Start a VC first.")
     except Exception as e:
         await mystic.edit_text(f"❌ Error: `{type(e).__name__}` - {e}")
 
-    # Optional: Delete user command message for privacy
+    # Optional: Delete the original command message
     try:
         await message.delete()
     except:
