@@ -1,13 +1,16 @@
-import asyncio
-import os
-import re
+import asyncio, httpx, os, re, yt_dlp
+
 from typing import Union
-import httpx
-import yt_dlp
-from pyrogram.enums import MessageEntityType
 from pyrogram.types import Message
+from pyrogram.enums import MessageEntityType
 from youtubesearchpython.__future__ import VideosSearch
+from BADMUSIC.utils.database import is_on_off
 from BADMUSIC.utils.formatters import time_to_seconds
+
+def time_to_seconds(time):
+    stringt = str(time)
+    return sum(int(x) * 60**i for i, x in enumerate(reversed(stringt.split(":"))))
+
 
 async def shell_cmd(cmd):
     proc = await asyncio.create_subprocess_shell(
@@ -22,6 +25,22 @@ async def shell_cmd(cmd):
         else:
             return errorz.decode("utf-8")
     return out.decode("utf-8")
+
+
+
+async def get_stream_url(query, video=False):
+    api_url = "http://3.0.146.239:1470/youtube"
+    api_key = "badmusic_ytstream_apikey_2025"
+    
+    async with httpx.AsyncClient(timeout=60) as client:
+        params = {"query": query, "video": video, "api_key": api_key}
+        response = await client.get(api_url, params=params)
+        if response.status_code != 200:
+            return ""
+        info = response.json()
+        return info.get("stream_url")
+
+
 
 class YouTubeAPI:
     def __init__(self):
@@ -61,10 +80,7 @@ class YouTubeAPI:
                         return entity.url
         if offset in (None,):
             return None
-        umm = text[offset : offset + length]
-        if "?si=" in umm:
-            umm = umm.split("?si=")[0]
-        return umm
+        return text[offset : offset + length]
 
     async def details(self, link: str, videoid: Union[bool, str] = None):
         if videoid:
@@ -118,20 +134,9 @@ class YouTubeAPI:
             link = self.base + link
         if "&" in link:
             link = link.split("&")[0]
-        proc = await asyncio.create_subprocess_exec(
-            "yt-dlp",
-            "-g",
-            "-f",
-            "best[height<=?720][width<=?1280]",
-            f"{link}",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await proc.communicate()
-        if stdout:
-            return 1, stdout.decode().split("\n")[0]
-        else:
-            return 0, stderr.decode()
+            
+        return await get_stream_url(link, True)
+        
 
     async def playlist(self, link, limit, user_id, videoid: Union[bool, str] = None):
         if videoid:
@@ -225,22 +230,6 @@ class YouTubeAPI:
         thumbnail = result[query_type]["thumbnails"][0]["url"].split("?")[0]
         return title, duration_min, thumbnail, vidid
 
-    async def get_video_info_from_api(self, url: str):
-        api_url = "http://3.0.146.239:1470/youtube"
-        api_key = "badmusic_ytstream_apikey_2025"
-        params = {
-            "url": url,
-            "format": "video",
-            "download": True,
-            "api_key": api_key,
-        }
-        async with httpx.AsyncClient() as client:
-            response = await client.get(api_url, params=params, timeout=60)
-            if response.status_code == 200:
-                return response.json()
-            else:
-                return {"status": "error", "message": "Failed to fetch data from API."}
-
     async def download(
         self,
         link: str,
@@ -254,40 +243,40 @@ class YouTubeAPI:
     ) -> str:
         if videoid:
             link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
         loop = asyncio.get_running_loop()
-        api_info = await self.get_video_info_from_api(link)
-        def audio_dl(api_info):
-            xyz = os.path.join("downloads", f"{api_info['videoid']}.{api_info['ext']}")
+
+        def audio_dl():
             ydl_optssx = {
                 "format": "bestaudio/best",
-                "outtmpl": xyz,
+                "outtmpl": "downloads/%(id)s.%(ext)s",
                 "geo_bypass": True,
                 "nocheckcertificate": True,
                 "quiet": True,
                 "no_warnings": True,
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
+            info = x.extract_info(link, False)
+            xyz = os.path.join("downloads", f"{info['id']}.{info['ext']}")
             if os.path.exists(xyz):
                 return xyz
-            x.download([api_info["url"]])
+            x.download([link])
             return xyz
 
-        def video_dl(api_info):
-            xyz = os.path.join("downloads", f"{api_info['videoid']}.{api_info['ext']}")
+        def video_dl():
             ydl_optssx = {
-                "format": "best",
-                "outtmpl": xyz,
+                "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio[ext=m4a])",
+                "outtmpl": "downloads/%(id)s.%(ext)s",
                 "geo_bypass": True,
                 "nocheckcertificate": True,
                 "quiet": True,
                 "no_warnings": True,
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
+            info = x.extract_info(link, False)
+            xyz = os.path.join("downloads", f"{info['id']}.{info['ext']}")
             if os.path.exists(xyz):
                 return xyz
-            x.download([api_info["url"]])
+            x.download([link])
             return xyz
 
         def song_video_dl():
@@ -336,9 +325,9 @@ class YouTubeAPI:
             fpath = f"downloads/{title}.mp3"
             return fpath
         elif video:
-            direct = True
-            downloaded_file = await loop.run_in_executor(None, video_dl, api_info)
+            downloaded_file = await get_stream_url(link, True)
+            direct = None
         else:
-            direct = True
-            downloaded_file = await loop.run_in_executor(None, audio_dl, api_info)
+            direct = None
+            downloaded_file = await get_stream_url(link, False)
         return downloaded_file, direct
