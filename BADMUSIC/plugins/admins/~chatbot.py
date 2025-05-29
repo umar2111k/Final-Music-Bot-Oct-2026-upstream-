@@ -1,6 +1,8 @@
 from pyrogram import Client, filters
 import httpx
-from BADMUSIC import app 
+from BADMUSIC import app
+
+
 
 API_URL = "http://3.0.146.239:8000/chatbot"
 API_KEY = "chatai.Badmunda.workers"
@@ -18,8 +20,9 @@ async def chatbot_reply(client, message):
             response = await client.get(API_URL, params=params)
             data = response.json()
 
-        reply_text = data.get("response", "❌ No reply received.")
+        reply_text = data.get("response", "Sorry, no reply from API.")
         await message.reply_text(reply_text)
 
     except Exception as e:
         await message.reply_text(f"⚠️ Error: {e}")
+
