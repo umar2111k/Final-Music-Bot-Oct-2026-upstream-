@@ -14,7 +14,7 @@ FONTS = {
     "dfont": ImageFont.truetype("BADMUSIC/assets/font2.otf", 12),
     "nfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 10),
     "tfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 20),
-    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 45),
+    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 32),
     "arial": ImageFont.truetype("BADMUSIC/assets/font2.ttf", 30),
     "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
 }
@@ -44,16 +44,29 @@ def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_
     return "...", font
 
 
+from PIL import Image
+
 def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
-    """Resize thumbnail to 640x640 square."""
-    target_size = 640
-    aspect_ratio = img.width / img.height
-    new_width = int(target_size * aspect_ratio) if aspect_ratio > 1 else target_size
-    new_height = target_size if aspect_ratio > 1 else int(target_size / aspect_ratio)
+    """Resize thumbnail to 1280x720 (YouTube standard size)."""
+    target_width, target_height = 1280, 720
+    img_ratio = img.width / img.height
+    target_ratio = target_width / target_height
+
+    if img_ratio > target_ratio:
+        new_height = target_height
+        new_width = int(new_height * img_ratio)
+    else:
+        new_width = target_width
+        new_height = int(new_width / img_ratio)
+
     img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    left = (img.width - target_size) // 2
-    top = (img.height - target_size) // 2
-    return img.crop((left, top, left + target_size, top + target_size))
+
+    left = (img.width - target_width) // 2
+    top = (img.height - target_height) // 2
+    right = left + target_width
+    bottom = top + target_height
+
+    return img.crop((left, top, right, bottom))
 
 
 def clean_text(text: str, limit: int = 17) -> str:
