@@ -3,6 +3,7 @@ from os import getenv
 
 from dotenv import load_dotenv
 from pyrogram import filters
+from distutils.util import strtobool
 
 load_dotenv()
 
