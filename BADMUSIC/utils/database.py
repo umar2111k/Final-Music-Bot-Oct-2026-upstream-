@@ -108,6 +108,14 @@ async def get_assistant(chat_id: int) -> str:
             userbot = await set_assistant(chat_id)
             return userbot
 
+async def is_commanddelete_on(chat_id: int) -> bool:
+    return chat_id not in command
+
+async def is_served_private_chat(chat_id: int) -> bool:
+    chat = await privatedb.find_one({"chat_id": chat_id})
+    if not chat:
+        return False
+
 
 async def set_calls_assistant(chat_id):
     from BADMUSIC.core.userbot import assistants
