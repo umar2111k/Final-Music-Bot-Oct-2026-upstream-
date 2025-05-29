@@ -286,7 +286,7 @@ class Call(PyTgCalls):
     async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOGGER_ID)
         await assistant.play(
-            config.LOG_GROUP_ID,
+            config.LOGGER_ID,
             MediaStream(link),
         )
         await asyncio.sleep(0.2)
