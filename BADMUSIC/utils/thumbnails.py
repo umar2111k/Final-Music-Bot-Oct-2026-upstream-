@@ -73,18 +73,32 @@ def clean_text(text: str, limit: int = 17) -> str:
     return f"{text.strip()[:limit - 3]}..." if len(text.strip()) > limit else text.strip()
 
 
-def add_controls(img: Image.Image) -> Image.Image:
-    """Add blur and overlay controls to thumbnail background."""
+def add_controls(img: Image.Image) -> tuple[Image.Image, tuple[int, int]]:
+    """Add blur and overlay controls to thumbnail background, centered."""
     img = img.filter(ImageFilter.GaussianBlur(25))
-    box = (120, 120, 520, 480)
+    box_width, box_height = 400, 360
+
+    # Center box
+    img_width, img_height = img.size
+    left = (img_width - box_width) // 2
+    top = (img_height - box_height) // 2
+    right = left + box_width
+    bottom = top + box_height
+    box = (left, top, right, bottom)
+
     region = img.crop(box)
-    controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
     dark_region = ImageEnhance.Brightness(region).enhance(0.5)
-    mask = Image.new("L", dark_region.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, box[2] - box[0], box[3] - box[1]), 40, fill=255)
+
+    mask = Image.new("L", (box_width, box_height), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, box_width, box_height), 40, fill=255)
+
     img.paste(dark_region, box, mask)
-    img.paste(controls, (135, 305), controls)
-    return img
+
+    controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
+    controls_pos = (left + 15, top + 185)
+    img.paste(controls, controls_pos, controls)
+
+    return img, (left, top)
 
 
 def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
@@ -154,28 +168,24 @@ async def get_thumb(videoid: str) -> str:
     if not thumb:
         return YOUTUBE_IMG_URL
 
-    bg = add_controls(thumb)
+    # With:
+    bg, top_left = add_controls(thumb)
+    left, top = top_left
+
     art = make_sq(thumb)
-    bg.paste(art, (145, 155), art)
+    art_pos = (left + 25, top + 35)
+    bg.paste(art, art_pos, art)
 
     draw = ImageDraw.Draw(bg)
-    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
+    draw.text((left + 165, top + 60), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
 
-    # Title
     safe_title, font = truncate_text_to_fit(
         "BADMUSIC/assets/font.ttf", title, box_width=230, max_font_size=16, min_font_size=10
     )
-    draw.text((285, 200), safe_title, (255, 255, 255), font=font)
+    draw.text((left + 165, top + 80), safe_title, (255, 255, 255), font=font)
+    draw.text((left + 167, top + 115), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+    draw.text((left + 358, top + 201), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
 
-    # Channel name
-    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
-
-    # Duration
-    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
-
-    os.makedirs("cache", exist_ok=True)
-    bg.save(save_path)
-    return save_path
 
 # Example usage for testing (in async function):
 # path = await get_thumb("dQw4w9WgXcQ")
