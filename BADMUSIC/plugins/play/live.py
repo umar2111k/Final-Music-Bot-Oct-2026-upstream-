@@ -6,6 +6,7 @@ from BADMUSIC.utils.decorators.language import languageCB
 from BADMUSIC.utils.stream.stream import stream
 from config import BANNED_USERS
 
+
 @app.on_callback_query(filters.regex("LiveStream") & ~BANNED_USERS)
 @languageCB
 async def play_live_stream(client, CallbackQuery, _):
@@ -28,43 +29,31 @@ async def play_live_stream(client, CallbackQuery, _):
         await CallbackQuery.answer()
     except Exception:
         pass
-
     mystic = await CallbackQuery.message.reply_text(
         _["play_2"].format(channel) if channel else _["play_1"]
     )
-
-    # Improved error handling for YouTube.track
     try:
         details, track_id = await YouTube.track(vidid, True)
-    except Exception as e:
-        # Agar YouTube.track fail ho jaye to error show karo
-        return await mystic.edit_text("» ғᴀɪʟᴇᴅ ᴛᴏ ǫᴜᴇʀʏ ʏᴏᴜᴛᴜʙᴇ ʟɪᴠᴇ sᴛʀᴇᴀᴍ: {}".format(str(e)))
-
+    except Exception:
+        return await mystic.edit_text(_["play_3"])
     ffplay = True if fplay == "f" else None
-
-    # Live check: duration_min None ya 0 ya string '0' ho sakti hai
-    duration_is_live = not details.get("duration_min") or str(details.get("duration_min")) in ["", "0", "None"]
-
-    if duration_is_live:  # Live stream hai
-        try:
-            await stream(
-                _,
-                mystic,
-                user_id,
-                details,
-                chat_id,
-                user_name,
-                CallbackQuery.message.chat.id,
-                video,
-                streamtype="live",
-                forceplay=ffplay,
-            )
-        except Exception as e:
-            ex_type = type(e).__name__
-            err = str(e) if ex_type == "AssistantErr" else _["general_2"].format(ex_type)
-            return await mystic.edit_text(err)
-    else:
-        # Agar duration mil jaye to iska matlab live nahi hai
-        return await mystic.edit_text("» ɴᴏᴛ ᴀ ʟɪᴠᴇ sᴛʀᴇᴀᴍ.")
-
+    if details["duration_min"]:
+        return await mystic.edit_text("ɪ ᴅᴏɴ'ᴛ ᴛʜɪɴᴋ ᴛʜᴀᴛ ɪᴛ's ᴀ ʟɪᴠᴇ sᴛʀᴇᴀᴍ.")
+    try:
+        await stream(
+            _,
+            mystic,
+            user_id,
+            details,
+            chat_id,
+            user_name,
+            CallbackQuery.message.chat.id,
+            video,
+            streamtype="live",
+            forceplay=ffplay,
+        )
+    except Exception as e:
+        ex_type = type(e).__name__
+        err = e if ex_type == "AssistantErr" else _["general_3"].format(ex_type)
+        return await mystic.edit_text(err)
     await mystic.delete()
