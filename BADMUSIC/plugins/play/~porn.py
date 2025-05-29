@@ -5,7 +5,6 @@ from BADMUSIC.core.call import Bad
 from pytgcalls.exceptions import NoActiveGroupCall
 from yt_dlp import YoutubeDL
 from bs4 import BeautifulSoup
-import os
 import random
 import requests
 
@@ -22,7 +21,7 @@ def get_video_info(title: str):
                 if link and 'https://' not in link:
                     return 'https://www.xnxx.com' + link
     except Exception as e:
-        print(f"[ERROR] ꜱᴇᴀʀᴄʜ ꜰᴀɪʟᴇᴅ: 🥲 {e}")
+        print(f"[ERROR] Search failed: {e}")
     return None
 
 async def get_stream_link(url: str):
@@ -38,39 +37,39 @@ async def get_stream_link(url: str):
             info_dict = ydl.extract_info(url, download=False)
             return info_dict["url"]
     except Exception as e:
-        print(f"[ERROR] ʏᴛ-ᴅʟᴘ ꜱᴛʀᴇᴀᴍ ᴇxᴛʀᴀᴄᴛ:😂 {e}")
+        print(f"[ERROR] yt-dlp stream extract: {e}")
         return None
 
 @app.on_message(filters.command("xxnx") & filters.group)
-async def stream_porn_to_vc(_, message: Message):
+async def stream_xxnx_to_vc(client, message: Message):
     chat_id = message.chat.id
 
     if len(message.command) < 2:
+        await message.reply_text("Kya dekhna hai? Example: `/xxnx sunny leone`")
         return
 
     query = " ".join(message.command[1:])
+    mystic = await message.reply_text("🔍 Searching, please wait...")
+
     video_url = get_video_info(query)
     if not video_url:
+        await mystic.edit_text("❌ No video found! Try something else.")
         return
 
     stream_url = await get_stream_link(video_url)
     if not stream_url:
+        await mystic.edit_text("❌ Unable to get stream link! Try again.")
         return
 
     try:
-        await Bad.stream_call(
-            chat_id,
-            stream_url,
-            stream_type="video"
-        )
+        await Bad.stream_call(chat_id, stream_url)
+        await mystic.edit_text(f"✅ Now playing: `{query}` in VC!\n[Watch Video]({video_url})", disable_web_page_preview=True)
     except NoActiveGroupCall:
-        await message.reply("ᴠᴄ ɪꜱ ɴᴏᴛ ᴀᴄᴛɪᴠᴇ. ꜱᴛᴀʀᴛ ᴀ ᴠᴄ ʙᴇꜰᴏʀᴇ ᴜꜱɪɴɢ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ🥹.")
-        return
+        await mystic.edit_text("⚠️ No active group call! Start a VC first.")
     except Exception as e:
-        await message.reply(f"ᴇʀʀᴏʀ: {e}")
-        return
+        await mystic.edit_text(f"❌ Error: `{type(e).__name__}` - {e}")
 
-    # Delete user command and bot reply (if any)
+    # Optional: Delete user command message for privacy
     try:
         await message.delete()
     except:
