@@ -14,7 +14,7 @@ FONTS = {
     "dfont": ImageFont.truetype("BADMUSIC/assets/font2.otf", 12),
     "nfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 10),
     "tfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 20),
-    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 32),
+    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 45),
     "arial": ImageFont.truetype("BADMUSIC/assets/font2.ttf", 30),
     "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
 }
@@ -44,81 +44,35 @@ def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_
     return "...", font
 
 
-from PIL import Image
-
 def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
-    """Resize thumbnail to 1280x720 (YouTube standard size)."""
-    target_width, target_height = 1280, 720
-    img_ratio = img.width / img.height
-    target_ratio = target_width / target_height
-
-    if img_ratio > target_ratio:
-        new_height = target_height
-        new_width = int(new_height * img_ratio)
-    else:
-        new_width = target_width
-        new_height = int(new_width / img_ratio)
-
+    """Resize thumbnail to 640x640 square."""
+    target_size = 640
+    aspect_ratio = img.width / img.height
+    new_width = int(target_size * aspect_ratio) if aspect_ratio > 1 else target_size
+    new_height = target_size if aspect_ratio > 1 else int(target_size / aspect_ratio)
     img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-
-    left = (img.width - target_width) // 2
-    top = (img.height - target_height) // 2
-    right = left + target_width
-    bottom = top + target_height
-
-    return img.crop((left, top, right, bottom))
+    left = (img.width - target_size) // 2
+    top = (img.height - target_size) // 2
+    return img.crop((left, top, left + target_size, top + target_size))
 
 
 def clean_text(text: str, limit: int = 17) -> str:
     return f"{text.strip()[:limit - 3]}..." if len(text.strip()) > limit else text.strip()
 
-def add_controls(img: Image.Image, artist_img: Image.Image, song_name: str, channel_name: str) -> Image.Image:
-    """Add blur and overlay controls + artist + song info to thumbnail background."""
+
+def add_controls(img: Image.Image) -> Image.Image:
+    """Add blur and overlay controls to thumbnail background."""
     img = img.filter(ImageFilter.GaussianBlur(25))
-    
-    controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
-    ctrl_w, ctrl_h = controls.size
-
-    # Center coordinates for box
-    center_x = img.width // 2
-    center_y = img.height // 2
-    left = center_x - ctrl_w // 2
-    top = center_y - ctrl_h // 2
-    right = left + ctrl_w
-    bottom = top + ctrl_h
-    box = (left, top, right, bottom)
-
-    # Crop region, darken and mask
+    box = (120, 120, 520, 480)
     region = img.crop(box)
+    controls = Image.open("BADMUSIC/assets/thum.png").convert("RGBA")
     dark_region = ImageEnhance.Brightness(region).enhance(0.5)
     mask = Image.new("L", dark_region.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, ctrl_w, ctrl_h), 40, fill=255)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, box[2] - box[0], box[3] - box[1]), 40, fill=255)
     img.paste(dark_region, box, mask)
-
-    # Paste artist image (left top corner inside box)
-    artist_resized = artist_img.resize((90, 90)).convert("RGBA")
-    artist_pos = (left + 20, top + 20)
-    img.paste(artist_resized, artist_pos, artist_resized)
-
-    # Text section (right of artist)
-    draw = ImageDraw.Draw(img)
-    font_bold = ImageFont.truetype("BADMUSIC/assets/font.ttf", 26)
-    font_song = ImageFont.truetype("BADMUSIC/assets/font2.otf", 22)
-    font_channel = ImageFont.truetype("BADMUSIC/assets/font2.otf", 18)
-
-    text_x = artist_pos[0] + artist_resized.width + 20
-    text_y = artist_pos[1]
-
-    draw.text((text_x, text_y), "BAD MUSIC", font=font_bold, fill="white")
-    draw.text((text_x, text_y + 32), song_name, font=font_song, fill="white")
-    draw.text((text_x, text_y + 62), channel_name, font=font_channel, fill="lightgray")
-
-    # Paste thumb.png at center bottom of box
-    thumb_pos_x = center_x - ctrl_w // 2
-    thumb_pos_y = bottom - controls.height - 10
-    img.paste(controls, (thumb_pos_x, thumb_pos_y), controls)
-
+    img.paste(controls, (135, 305), controls)
     return img
+
 
 def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
     """Make square rounded album art image."""
@@ -146,22 +100,30 @@ def get_duration(duration: int, time: str = "0:24") -> str:
 
 
 async def fetch_image(url: str) -> Image.Image | None:
-    """Fetch image from URL asynchronously."""
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-                    return Image.open(BytesIO(data)).convert("RGBA")
-    except Exception:
+    """Download and return image from URL."""
+    if not url:
         return None
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, timeout=5) as response:
+                if response.status != 200:
+                    return None
+                data = await response.read()
+                img = Image.open(BytesIO(data)).convert("RGBA")
+                return resize_youtube_thumbnail(img) if "ytimg.com" in url else img
+        except Exception:
+            return None
+
 
 async def get_thumb(videoid: str) -> str:
+    """
+    Generates a styled YouTube thumbnail.
+    """
     save_path = f"cache/{videoid}_v5.png"
     if os.path.exists(save_path):
         return save_path
 
-    # YouTube data fetch
+    # Fetch YouTube video data
     try:
         results = await VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1).next()
         result = results.get("result", [{}])[0]
@@ -170,21 +132,37 @@ async def get_thumb(videoid: str) -> str:
 
     title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
     channel = result.get("channel", {}).get("name", "Unknown Channel")
+    duration_str = result.get("duration", "0:00")
+    parts = list(map(int, duration_str.split(":")))
+    duration = sum(part * 60 ** i for i, part in enumerate(reversed(parts)))
     thumbnail_url = result.get("thumbnails", [{}])[0].get("url", "").split("?")[0] or YOUTUBE_IMG_URL
 
     thumb = await fetch_image(thumbnail_url)
     if not thumb:
         return YOUTUBE_IMG_URL
 
-    # Background blur
-    bg = thumb.copy()
+    bg = add_controls(thumb)
+    art = make_sq(thumb)
+    bg.paste(art, (145, 155), art)
 
-    # Artist art
-    artist_img = make_sq(thumb, size=100)
+    draw = ImageDraw.Draw(bg)
+    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
 
-    # Add everything in box
-    bg = add_controls(bg, artist_img, clean_text(title, 35), clean_text(channel, 25))
+    # Title
+    safe_title, font = truncate_text_to_fit(
+        "BADMUSIC/assets/font.ttf", title, box_width=230, max_font_size=16, min_font_size=10
+    )
+    draw.text((285, 200), safe_title, (255, 255, 255), font=font)
+
+    # Channel name
+    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+
+    # Duration
+    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
 
     os.makedirs("cache", exist_ok=True)
     bg.save(save_path)
     return save_path
+
+# Example usage for testing (in async function):
+# path = await get_thumb("dQw4w9WgXcQ")
