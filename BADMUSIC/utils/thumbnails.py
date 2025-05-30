@@ -144,11 +144,11 @@ async def get_thumb(videoid: str) -> str:
         print(f"Error fetching YouTube results: {e}")
         return YOUTUBE_IMG_URL
 
-    # --- Song title ko ab 4 words tak limit kar diya gaya hai ---
+    # --- Song title 
     raw_title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
     title_words = raw_title.split()
     if title_words:
-        title = " ".join(title_words[:4])  # Ab 4 words tak lega
+        title = " ".join(title_words[:4])  # 
     else:
         title = "Unknown"
 
@@ -198,6 +198,3 @@ async def get_thumb(videoid: str) -> str:
 
     bg.save(save_dir)
     return save_dir
-
-# Example usage:
-# path = await get_thumb("dQw4w9WgXcQ")
