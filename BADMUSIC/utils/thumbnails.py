@@ -124,7 +124,15 @@ async def get_thumb(videoid: str) -> str:
     except Exception:
         return YOUTUBE_IMG_URL
 
-    title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
+    # --- Song title ko sirf ek word tak limit kar diya gaya hai yahan ---
+    raw_title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
+    title_words = raw_title.split()
+    if title_words:
+        title = title_words[0]  # Sirf pehla word (jaise "Hello")
+        # Agar aapko 2 words chahiye toh: title = " ".join(title_words[:2])
+    else:
+        title = "Unknown"
+
     channel = result.get("channel", {}).get("name", "Unknown Channel")
     duration_str = result.get("duration", "0:00")
     parts = list(map(int, duration_str.split(":")))
@@ -145,7 +153,7 @@ async def get_thumb(videoid: str) -> str:
     badmusic_font = get_fitting_font(FONT_PATHS["nfont"], badmusic_text, box_width=200, max_font_size=18, min_font_size=10)
     draw.text((285, 180), badmusic_text, (192, 192, 192), font=badmusic_font)
 
-    # Title (truncate and fit)
+    # Title (chhota title)
     safe_title, title_font = truncate_text_to_fit(
         FONT_PATHS["nfont"], title, box_width=230, max_font_size=16, min_font_size=10
     )
