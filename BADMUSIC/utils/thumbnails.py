@@ -23,9 +23,6 @@ FONTS = {
 }
 
 def get_fitting_font(font_path, text, box_width, max_font_size=20, min_font_size=10):
-    """
-    Dynamically adjust font size to fit text within the given box width.
-    """
     font_size = max_font_size
     while font_size >= min_font_size:
         font = ImageFont.truetype(font_path, font_size)
@@ -36,9 +33,6 @@ def get_fitting_font(font_path, text, box_width, max_font_size=20, min_font_size
     return ImageFont.truetype(font_path, min_font_size)
 
 def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_size=10):
-    """
-    Truncate and resize the text so it fits in the box.
-    """
     font = get_fitting_font(font_path, text, box_width, max_font_size, min_font_size)
     text_width, _ = font.getsize(text)
     if text_width <= box_width:
@@ -150,16 +144,14 @@ async def get_thumb(videoid: str) -> str:
         print(f"Error fetching YouTube results: {e}")
         return YOUTUBE_IMG_URL
 
-    # Extract info
-    # --- Song title ko sirf ek word tak limit kar diya gaya hai yahan ---
+    # --- Song title ko ab 4 words tak limit kar diya gaya hai ---
     raw_title = re.sub(r"\W+", " ", result.get("title", "Unknown Title")).title()
     title_words = raw_title.split()
     if title_words:
-        title = title_words[0]  # Sirf pehla word (jaise "Hello")
-        # Agar aapko 2 words chahiye toh: title = " ".join(title_words[:2])
+        title = " ".join(title_words[:4])  # Ab 4 words tak lega
     else:
         title = "Unknown"
-        
+
     channel = result.get("channel", {}).get("name", "Unknown Channel")
     duration_str = result.get("duration", "0:00")
     try:
