@@ -9,27 +9,28 @@ from youtubesearchpython.__future__ import VideosSearch
 from config import YOUTUBE_IMG_URL
 
 # ---- FONTS ----
-FONTS = {
-    "cfont": ImageFont.truetype("BADMUSIC/assets/cfont.ttf", 15),
-    "dfont": ImageFont.truetype("BADMUSIC/assets/font2.otf", 12),
-    "nfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 10),
-    "tfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 20),
-    "title": ImageFont.truetype("BADMUSIC/assets/font3.ttf", 45),
-    "arial": ImageFont.truetype("BADMUSIC/assets/font2.ttf", 30),
-    "mainfont": ImageFont.truetype("BADMUSIC/assets/font.ttf", 30),
+FONT_PATHS = {
+    "cfont": "BADMUSIC/assets/cfont.ttf",
+    "dfont": "BADMUSIC/assets/font2.otf",
+    "nfont": "BADMUSIC/assets/font.ttf",
+    "tfont": "BADMUSIC/assets/font.ttf",
+    "title": "BADMUSIC/assets/font3.ttf",
+    "arial": "BADMUSIC/assets/font2.ttf",
+    "mainfont": "BADMUSIC/assets/font.ttf",
 }
 
+def load_font(font_path, size):
+    return ImageFont.truetype(font_path, size)
 
 def get_fitting_font(font_path, text, box_width, max_font_size=20, min_font_size=10):
     """Returns a font size that fits the text in the given width."""
     font_size = max_font_size
     while font_size >= min_font_size:
-        font = ImageFont.truetype(font_path, font_size)
+        font = load_font(font_path, font_size)
         if font.getlength(text) <= box_width:
             return font
         font_size -= 1
-    return ImageFont.truetype(font_path, min_font_size)
-
+    return load_font(font_path, min_font_size)
 
 def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_size=10):
     """Truncates and resizes text to fit the width limit."""
@@ -43,7 +44,6 @@ def truncate_text_to_fit(font_path, text, box_width, max_font_size=20, min_font_
             return truncated, font
     return "...", font
 
-
 def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
     """Resize thumbnail to 640x640 square."""
     target_size = 640
@@ -55,10 +55,8 @@ def resize_youtube_thumbnail(img: Image.Image) -> Image.Image:
     top = (img.height - target_size) // 2
     return img.crop((left, top, left + target_size, top + target_size))
 
-
 def clean_text(text: str, limit: int = 17) -> str:
     return f"{text.strip()[:limit - 3]}..." if len(text.strip()) > limit else text.strip()
-
 
 def add_controls(img: Image.Image) -> Image.Image:
     """Add blur and overlay controls to thumbnail background."""
@@ -73,7 +71,6 @@ def add_controls(img: Image.Image) -> Image.Image:
     img.paste(controls, (135, 305), controls)
     return img
 
-
 def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
     """Make square rounded album art image."""
     width, height = image.size
@@ -87,7 +84,6 @@ def make_sq(image: Image.Image, size: int = 125) -> Image.Image:
     rounded.putalpha(mask)
     return rounded
 
-
 def get_duration(duration: int, time: str = "0:24") -> str:
     try:
         m1, s1 = divmod(duration, 60)
@@ -97,7 +93,6 @@ def get_duration(duration: int, time: str = "0:24") -> str:
         return f"{_min}:{sec:02d}"
     except Exception:
         return "0:00"
-
 
 async def fetch_image(url: str) -> Image.Image | None:
     """Download and return image from URL."""
@@ -113,7 +108,6 @@ async def fetch_image(url: str) -> Image.Image | None:
                 return resize_youtube_thumbnail(img) if "ytimg.com" in url else img
         except Exception:
             return None
-
 
 async def get_thumb(videoid: str) -> str:
     """
@@ -146,19 +140,27 @@ async def get_thumb(videoid: str) -> str:
     bg.paste(art, (145, 155), art)
 
     draw = ImageDraw.Draw(bg)
-    draw.text((285, 180), "BADMUSIC", (192, 192, 192), font=FONTS["nfont"])
+    # BADMUSIC label
+    badmusic_text = "BADMUSIC"
+    badmusic_font = get_fitting_font(FONT_PATHS["nfont"], badmusic_text, box_width=200, max_font_size=18, min_font_size=10)
+    draw.text((285, 180), badmusic_text, (192, 192, 192), font=badmusic_font)
 
-    # Title
-    safe_title, font = truncate_text_to_fit(
-        "BADMUSIC/assets/font.ttf", title, box_width=230, max_font_size=16, min_font_size=10
+    # Title (truncate and fit)
+    safe_title, title_font = truncate_text_to_fit(
+        FONT_PATHS["nfont"], title, box_width=230, max_font_size=16, min_font_size=10
     )
-    draw.text((285, 200), safe_title, (255, 255, 255), font=font)
+    draw.text((285, 200), safe_title, (255, 255, 255), font=title_font)
 
     # Channel name
-    draw.text((287, 235), clean_text(channel, 20), (255, 255, 255), font=FONTS["cfont"])
+    channel_name, channel_font = truncate_text_to_fit(
+        FONT_PATHS["cfont"], clean_text(channel, 20), box_width=200, max_font_size=15, min_font_size=10
+    )
+    draw.text((287, 235), channel_name, (255, 255, 255), font=channel_font)
 
     # Duration
-    draw.text((478, 321), get_duration(duration), (192, 192, 192), font=FONTS["dfont"])
+    duration_text = get_duration(duration)
+    duration_font = get_fitting_font(FONT_PATHS["dfont"], duration_text, box_width=40, max_font_size=13, min_font_size=10)
+    draw.text((478, 321), duration_text, (192, 192, 192), font=duration_font)
 
     os.makedirs("cache", exist_ok=True)
     bg.save(save_path)
