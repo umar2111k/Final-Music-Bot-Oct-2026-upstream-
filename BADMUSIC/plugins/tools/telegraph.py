@@ -4,33 +4,35 @@ from pyrogram import filters
 from pyrogram.enums import ParseMode
 from BADMUSIC import app
 
-# 🔠 Small caps helper
+# Small caps conversion helper
 def to_small_caps(text):
     normal = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     small_caps = "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ" * 2
     return text.translate(str.maketrans(normal, small_caps))
 
-# 🔗 Upload to your FastAPI server
-def upload_to_my_api(file_path):
-    url = "http://13.213.46.226:5050/upload"
-    api_key = "badtelegrapfapikey"
+# Upload function
+def upload_file(file_path):
+    url = "https://catbox.moe/user/api.php"
+    data = {"reqtype": "fileupload"}
     with open(file_path, "rb") as file:
-        files = {"file": file}
-        params = {"api_key": api_key}
-        response = requests.post(url, files=files, params=params)
+        files = {"fileToUpload": file}
+        response = requests.post(url, data=data, files=files)
 
     if response.status_code == 200:
-        result = response.json()
-        return True, result.get("download_url", "❌ No URL returned.")
+        text = response.text.strip()
+        if text.startswith("http"):
+            return True, text  # Valid URL
+        else:
+            return False, f"❌ Unexpected response: {text}"
     else:
-        return False, f"❌ Error {response.status_code} - {response.text}"
+        return False, f"❌ ᴇʀʀᴏʀ {response.status_code} - {response.text}"
 
-# 🎯 Telegram Command Handler
+# Bot command handler
 @app.on_message(filters.command(["tgm", "tgt", "telegraph", "tl"]))
-async def upload_media(client, message):
+async def get_link_group(client, message):
     if not message.reply_to_message:
         return await message.reply_text(
-            to_small_caps("please reply to a media file to upload.")
+            to_small_caps("please reply to a media file to upload on catbox.")
         )
 
     media = message.reply_to_message
@@ -62,18 +64,18 @@ async def upload_media(client, message):
 
     try:
         local_path = await media.download(progress=progress)
-        await text.edit_text(to_small_caps("📤 uploading to server..."))
+        await text.edit_text(to_small_caps("📤 uploading to catbox..."))
 
-        success, result = upload_to_my_api(local_path)
+        success, url = upload_file(local_path)
 
         if success:
             await text.edit_text(
-                f"**✅ {to_small_caps('uploaded successfully!')}**\n\n**🔗 {to_small_caps('url')}:** `{result}`",
+                f"**💫 {to_small_caps('uploaded to Catbox!')}**\n\n**🔗 {to_small_caps('URL')}:** `{url}`",
                 disable_web_page_preview=True,
                 parse_mode=ParseMode.MARKDOWN
             )
         else:
-            await text.edit_text(to_small_caps(f"upload failed:\n{result}"))
+            await text.edit_text(to_small_caps(f"upload failed:\n{url}"))
 
         try:
             os.remove(local_path)
