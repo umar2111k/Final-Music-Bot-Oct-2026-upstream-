@@ -27,27 +27,3 @@ async def autoapprove(client, message: ChatJoinRequest):
             text=TEXT.format(mention=user.mention, title=chat.title),
             reply_markup=InlineKeyboardMarkup(EVAA),
         )
-
-# Command to accept old pending requests manually
-@app.on_message(filters.command("allac") & filters.user(7588172591))  # Replace YOUR_ID
-async def accept_old_requests(_, message):
-    for chat_id in CHAT_ID:
-        assistant = await get_assistant(chat_id)
-        if not assistant:
-            await message.reply_text(f"No assistant found for chat ID: {chat_id}")
-            continue
-
-        try:
-            count = 0
-            async for req in assistant.get_chat_join_requests(chat_id):
-                await assistant.approve_chat_join_request(chat_id, req.from_user.id)
-                count += 1
-                if APPROVED == "on":
-                    await assistant.send_message(
-                        chat_id,
-                        text=TEXT.format(mention=req.from_user.mention, title=req.chat.title),
-                        reply_markup=InlineKeyboardMarkup(EVAA),
-                    )
-            await message.reply_text(f"Approved {count} old join requests in {chat_id}.")
-        except Exception as e:
-            await message.reply_text(f"Error in {chat_id}: {e}")
