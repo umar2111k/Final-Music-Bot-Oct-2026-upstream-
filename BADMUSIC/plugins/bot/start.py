@@ -43,14 +43,12 @@ async def send_media_spoiler(message, url, caption, reply_markup=None):
             caption=caption,
             reply_markup=reply_markup,
             supports_streaming=True,
-            spoiler=True,
         )
     else:
         await message.reply_photo(
             url,
             caption=caption,
             reply_markup=reply_markup,
-            spoiler=True,
         )
 
 @app.on_message(filters.command(["start"]) & filters.private & ~BANNED_USERS)
