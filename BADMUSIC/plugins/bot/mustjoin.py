@@ -59,7 +59,6 @@ async def must_join_channel(app: Client, msg: Message):
                 ),
                 reply_markup=InlineKeyboardMarkup(buttons),
                 parse_mode="Markdown"
-)
             )
             await msg.stop_propagation()
             # Optionally clean up the downloaded photo file
