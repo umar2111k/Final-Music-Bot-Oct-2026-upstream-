@@ -5,6 +5,7 @@ from pyrogram.errors import ChatAdminRequired, UserNotParticipant, ChatWriteForb
 from pyrogram.enums import ChatMemberStatus
 
 import requests
+import os
 
 # List of mandatory channels/groups
 MUST_JOIN = ["PBX_CHAT", "PBX_UPDATE"]
@@ -35,29 +36,32 @@ async def must_join_channel(app: Client, msg: Message):
 
     if missing_channels:
         try:
-            # Try to get user's profile photo using get_users (Pyrogram v2+)
+            # Try to get user's profile photo and download it
             try:
                 user = await app.get_users(msg.from_user.id)
                 if user.photo:
-                    photo = user.photo.big_file_id
+                    # Download the user's big profile photo to a temporary file
+                    photo_path = await app.download_media(user.photo.big_file_id)
+                    photo_input = photo_path
                 else:
                     raise Exception("No profile pic")
-                photo_input = photo
             except Exception:
                 # Fallback image
-                fallback_url = "https://files.catbox.moe/bjnhm5.jpg"
-                photo_input = fallback_url
+                photo_input = "https://files.catbox.moe/bjnhm5.jpg"
 
             # Send the photo as Spoiler (Pyrogram v2+ has 'has_spoiler' param)
             await msg.reply_photo(
                 photo=photo_input,
                 has_spoiler=True,
                 caption=(
-                    "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
+                    "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
                     + "\n".join([f"[ᴊᴏɪɴ {channel}](https://t.me/{channel})" for channel in missing_channels])
                 ),
                 reply_markup=InlineKeyboardMarkup(buttons)
             )
             await msg.stop_propagation()
+            # Optionally clean up the downloaded photo file
+            if "photo_path" in locals() and os.path.exists(photo_path):
+                os.remove(photo_path)
         except ChatWriteForbidden:
             pass
