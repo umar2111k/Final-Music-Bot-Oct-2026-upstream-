@@ -1,87 +1,80 @@
-import os
-import requests
 from pyrogram import Client, filters
-from BADMUSIC import app
+import requests
+import aiohttp
+import os
+import re
+from BADMUSIC import app as bot
 
-API_URL = "http://3.0.146.239:1470/youtube"
 API_KEY = "badmusic_ytstream_apikey_2025"
+BASE_URL = "http://3.0.146.239:1470/youtube"  # 👈 updated URL
+YOUTUBE_URL_PATTERN = r'(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+'
 
-def fetch_media(query, req_format="mp3"):
-    """
-    query: song name or YouTube URL
-    req_format: "mp3" for audio, "mp4" for video
-    """
+
+
+async def download_and_send(client, message, user_input, format):
+    await message.reply_text(f"🔎 Fetching {format.upper()} for: `{user_input}`")
+
+    # check if input is URL or query
     params = {
-        "query": query,
-        "format": req_format,
-        "api_key": API_KEY,
-        "download": "true"
+        "format": format,
+        "download": True,
+        "api_key": API_KEY
     }
+
+    if re.match(YOUTUBE_URL_PATTERN, user_input):
+        params["url"] = user_input
+    else:
+        params["query"] = user_input
+
     try:
-        response = requests.get(API_URL, params=params, timeout=30)
-        if response.status_code == 200 and "stream_url" in response.json():
-            return response.json()
+        response = requests.get(BASE_URL, params=params)
+        data = response.json()
+
+        if response.status_code != 200 or "stream_url" not in data:
+            return await message.reply_text(f"❌ Error: {data.get('detail', 'Unknown error')}")
+
+        # create downloads folder if not exists
+        os.makedirs("downloads", exist_ok=True)
+
+        # prepare filename & path
+        filename = f"{data['title']}.{data['format']}"
+        filepath = os.path.join("downloads", filename)
+
+        # download file
+        async with aiohttp.ClientSession() as session:
+            async with session.get(data["stream_url"]) as resp:
+                with open(filepath, 'wb') as f:
+                    while True:
+                        chunk = await resp.content.read(1024)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+
+        # send file
+        if format == "mp3":
+            await message.reply_audio(audio=filepath, title=data['title'], performer=data.get("author"))
         else:
-            return None
+            await message.reply_video(video=filepath, caption=data['title'])
+
+        os.remove(filepath)
+
     except Exception as e:
-        print(f"API Error: {e}")
-        return None
+        await message.reply_text(f"⚠️ Failed: `{str(e)}`")
 
-async def download_and_send(message, query, req_format="mp3"):
-    media_info = fetch_media(query, req_format)
-    if not media_info or not media_info.get("stream_url"):
-        await message.reply(f"Sorry, couldn't find or download: '{query}'.")
-        return
 
-    filename = f"{media_info['title']}.{media_info['format']}"
-    download_url = media_info['stream_url']
-
-    # Download file
-    try:
-        with requests.get(download_url, stream=True) as r, open(filename, "wb") as file:
-            for chunk in r.iter_content(1024 * 1024):  # 1MB chunks
-                if chunk:
-                    file.write(chunk)
-    except Exception as e:
-        await message.reply("Download failed. Please try again later.")
-        print(f"Download error: {e}")
-        return
-
-    caption = (
-        f"<b>Title:</b> {media_info['title']}\n"
-        f"<b>Author:</b> {media_info.get('author', 'N/A')}\n"
-        f"<b>Duration:</b> {media_info.get('duration', 'N/A')} sec\n"
-        f"<b>Type:</b> {media_info['type']}\n"
-        f"<b>Source:</b> <a href='{media_info['watch_url']}'>YouTube</a>"
-    )
-
-    # Send file
-    try:
-        if req_format == "mp3":
-            await message.reply_audio(audio=open(filename, "rb"), caption=caption, parse_mode="html", thumb=media_info.get("thumbnail"))
-        else:
-            await message.reply_video(video=open(filename, "rb"), caption=caption, parse_mode="html", thumb=media_info.get("thumbnail"))
-    except Exception as e:
-        await message.reply("Failed to send file.")
-        print(f"Send error: {e}")
-    finally:
-        if os.path.exists(filename):
-            os.remove(filename)
-
-# /song command (audio)
-@app.on_message(filters.command("song", prefixes=["/", "!", ".", ""]))
+@bot.on_message(filters.command("song") & filters.private)
 async def song_command(client, message):
-    query = message.text.split(" ", 1)[1] if len(message.text.split(" ", 1)) > 1 else None
-    if not query:
-        await message.reply("Please provide a song name or YouTube URL after the /song command.")
-        return
-    await download_and_send(message, query, req_format="mp3")
+    if len(message.command) < 2:
+        return await message.reply_text("❗ Usage: /song <query or YouTube URL>")
+    user_input = message.text.split(None, 1)[1]
+    await download_and_send(client, message, user_input, "mp3")
 
-# /video command (video)
-@app.on_message(filters.command("video", prefixes=["/", "!", ".", ""]))
+
+@bot.on_message(filters.command("video") & filters.private)
 async def video_command(client, message):
-    query = message.text.split(" ", 1)[1] if len(message.text.split(" ", 1)) > 1 else None
-    if not query:
-        await message.reply("Please provide a song name or YouTube URL after the /video command.")
-        return
-    await download_and_send(message, query, req_format="mp4")
+    if len(message.command) < 2:
+        return await message.reply_text("❗ Usage: /video <query or YouTube URL>")
+    user_input = message.text.split(None, 1)[1]
+    await download_and_send(client, message, user_input, "mp4")
+
+                                           
