@@ -3,7 +3,7 @@ import requests
 import aiohttp
 import os
 import re
-from BADMUSIC import app
+from BADMUSIC import app as bot
 
 API_KEY = "badmusic_ytstream_apikey_2025"
 BASE_URL = "http://3.0.146.239:1470/youtube"  # 👈 updated URL
