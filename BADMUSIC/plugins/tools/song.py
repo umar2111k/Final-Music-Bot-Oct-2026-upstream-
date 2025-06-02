@@ -8,7 +8,7 @@ import asyncio
 from BADMUSIC import app as bot
 
 API_KEY = "badmusic_ytstream_apikey_2025"
-BASE_URL = "http://3.0.146.239:1470/youtube"  # 👈 updated URL
+BASE_URL = "http://3.0.146.239:1470/youtube"
 YOUTUBE_URL_PATTERN = r'(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+'
 
 async def get_song_info(title, author, album=None, release_date=None):
