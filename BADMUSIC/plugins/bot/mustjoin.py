@@ -15,36 +15,24 @@ async def must_join_channel(app: Client, msg: Message):
     if not MUST_JOIN:
         return
 
-    missing_channels = []
-    buttons = []
+    missing_channels = []  # To store missing channel names
+    buttons = []  # To store button objects
 
     for channel in MUST_JOIN:
         try:
             await app.get_chat_member(channel, msg.from_user.id)
         except UserNotParticipant:
             try:
-                # Get chat info (for both id and username)
-                chat_info = await app.get_chat(channel)
-                link = None
-                # Try to get invite link
-                if hasattr(chat_info, "username") and chat_info.username:
-                    link = f"https://t.me/{chat_info.username}"
-                elif hasattr(chat_info, "invite_link") and chat_info.invite_link:
-                    link = chat_info.invite_link
+                if channel.isalpha():
+                    link = f"https://t.me/{channel}"
                 else:
-                    # Try to export invite link (need admin rights)
-                    try:
-                        link = await app.export_chat_invite_link(chat_info.id)
-                    except ChatAdminRequired:
-                        print(f"๏ ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴍᴏᴛᴇ ᴍᴇ ᴀꜱ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ {channel}!")
-                        continue  # Skip this channel
-
+                    chat_info = await app.get_chat(channel)
+                    link = chat_info.invite_link
                 if link:
-                    missing_channels.append((chat_info.title or channel, link))
-                    buttons.append([InlineKeyboardButton(f"ᴊᴏɪɴ {chat_info.title or channel}", url=link)])
+                    missing_channels.append(channel)
+                    buttons.append([InlineKeyboardButton(f"ᴊᴏɪɴ {channel}", url=link)])
             except ChatAdminRequired:
                 print(f"๏ ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴍᴏᴛᴇ ᴍᴇ ᴀꜱ ᴀɴ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ {channel}!")
-                continue
 
     if missing_channels:
         try:
@@ -52,27 +40,27 @@ async def must_join_channel(app: Client, msg: Message):
             try:
                 user = await app.get_users(msg.from_user.id)
                 if user.photo:
+                    # Download the user's big profile photo to a temporary file
                     photo_path = await app.download_media(user.photo.big_file_id)
                     photo_input = photo_path
                 else:
                     raise Exception("No profile pic")
             except Exception:
+                # Fallback image
                 photo_input = "https://files.catbox.moe/bjnhm5.jpg"
 
-            # Prepare the caption with correct links
-            caption = (
-                "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
-                + "\n".join([f"[ᴊᴏɪɴ {title}]({link})" for title, link in missing_channels])
-            )
-
+            # Send the photo as Spoiler (Pyrogram v2+ has 'has_spoiler' param)
             await msg.reply_photo(
                 photo=photo_input,
                 has_spoiler=True,
-                caption=caption,
-                reply_markup=InlineKeyboardMarkup(buttons),
-                disable_web_page_preview=True
+                caption=(
+                    "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
+                    + "\n".join([f"[ᴊᴏɪɴ {channel}](https://t.me/{channel})" for channel in missing_channels])
+                ),
+                reply_markup=InlineKeyboardMarkup(buttons)
             )
             await msg.stop_propagation()
+            # Optionally clean up the downloaded photo file
             if "photo_path" in locals() and os.path.exists(photo_path):
                 os.remove(photo_path)
         except ChatWriteForbidden:
