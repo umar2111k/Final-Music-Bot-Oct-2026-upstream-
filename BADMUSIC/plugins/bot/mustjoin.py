@@ -1,9 +1,10 @@
 from pyrogram import Client, filters
 from BADMUSIC import app
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, InputMediaPhoto
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.errors import ChatAdminRequired, UserNotParticipant, ChatWriteForbidden
 from pyrogram.enums import ChatMemberStatus
-import io
+
+import requests
 
 # List of mandatory channels/groups
 MUST_JOIN = ["PBX_CHAT", "PBX_UPDATE"]
@@ -26,7 +27,6 @@ async def must_join_channel(app: Client, msg: Message):
                 else:
                     chat_info = await app.get_chat(channel)
                     link = chat_info.invite_link
-
                 if link:
                     missing_channels.append(channel)
                     buttons.append([InlineKeyboardButton(f"ᴊᴏɪɴ {channel}", url=link)])
@@ -35,22 +35,22 @@ async def must_join_channel(app: Client, msg: Message):
 
     if missing_channels:
         try:
-            # Try to get user's profile photo
+            # Try to get user's profile photo using get_users (Pyrogram v2+)
             try:
-                photos = await app.get_profile_photos(msg.from_user.id, limit=1)
-                if photos.total_count > 0:
-                    file = await app.download_media(photos[0].file_id)
-                    photo_bytes = open(file, "rb").read()
+                user = await app.get_users(msg.from_user.id)
+                if user.photo:
+                    photo = user.photo.big_file_id
                 else:
-                    raise Exception("ɴᴏ ᴘʀᴏꜰɪʟᴇ ᴘɪᴄ")
-            except:
+                    raise Exception("No profile pic")
+                photo_input = photo
+            except Exception:
                 # Fallback image
-                import requests
-                photo_bytes = requests.get("https://files.catbox.moe/bjnhm5.jpg").content
+                fallback_url = "https://files.catbox.moe/bjnhm5.jpg"
+                photo_input = fallback_url
 
-            # Send the photo as Spoiler
+            # Send the photo as Spoiler (Pyrogram v2+ has 'has_spoiler' param)
             await msg.reply_photo(
-                photo=photo_bytes,
+                photo=photo_input,
                 has_spoiler=True,
                 caption=(
                     "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀsᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
