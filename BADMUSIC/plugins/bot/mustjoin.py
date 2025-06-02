@@ -49,15 +49,19 @@ async def must_join_channel(app: Client, msg: Message):
                 # Fallback image
                 photo_input = "https://files.catbox.moe/bjnhm5.jpg"
 
-            # Send the photo as Spoiler (Pyrogram v2+ has 'has_spoiler' param)
+            # Prepare the caption with clickable links using Markdown
+            caption = (
+                "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
+                + "\n".join([f"[ᴊᴏɪɴ {channel}](https://t.me/{channel})" for channel in missing_channels])
+            )
+
+            # Send the photo with Markdown links in the caption
             await msg.reply_photo(
                 photo=photo_input,
                 has_spoiler=True,
-                caption=(
-                    "๏ ᴀᴄᴄᴏʀᴅɪɴɢ ᴛᴏ ᴍʏ ᴅᴀᴛᴀʙᴀꜱᴇ, ʏᴏᴜ'ᴠᴇ ɴᴏᴛ ᴊᴏɪɴᴇᴅ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ/ɢʀᴏᴜᴘꜱ ʏᴇᴛ:\n\n"
-                    + "\n".join([f"[ᴊᴏɪɴ {channel}](https://t.me/{channel})" for channel in missing_channels])
-                ),
-                reply_markup=InlineKeyboardMarkup(buttons)
+                caption=caption,
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode="markdown"
             )
             await msg.stop_propagation()
             # Optionally clean up the downloaded photo file
