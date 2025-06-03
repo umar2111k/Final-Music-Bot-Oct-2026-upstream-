@@ -6,43 +6,49 @@ import re
 from BADMUSIC import app as bot
 
 API_KEY = "badmusic_ytstream_apikey_2025"
-BASE_URL = "http://3.0.146.239:1470/youtube"  # 👈 updated URL
-YOUTUBE_URL_PATTERN = r'(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+'
-
-
+BASE_URL = "http://3.0.146.239:1470/youtube"
+YOUTUBE_URL_PATTERN = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+"
 
 async def download_and_send(client, message, user_input, format):
     await message.reply_text(f"🔎 Fetching {format.upper()} for: `{user_input}`")
 
-    # check if input is URL or query
     params = {
         "format": format,
         "download": True,
-        "api_key": API_KEY
+        "api_key": API_KEY,
     }
-
-    if re.match(YOUTUBE_URL_PATTERN, user_input):
-        params["url"] = user_input
+    # Check if input is a YouTube URL
+    if re.match(YOUTUBE_URL_PATTERN, user_input.strip()):
+        params["url"] = user_input.strip()
     else:
-        params["query"] = user_input
+        params["query"] = user_input.strip()
 
     try:
         response = requests.get(BASE_URL, params=params)
-        data = response.json()
+        try:
+            data = response.json()
+        except Exception:
+            return await message.reply_text(f"❌ Error: API se invalid response aaya: {response.text}")
 
-        if response.status_code != 200 or "stream_url" not in data:
-            return await message.reply_text(f"❌ Error: {data.get('detail', 'Unknown error')}")
+        if response.status_code != 200:
+            return await message.reply_text(f"❌ Error: {data.get('detail', 'API error')}")
+
+        if not data.get("stream_url"):
+            return await message.reply_text(f"❌ Error: Song ka stream_url nahi mila. API ka response: {data}")
 
         # create downloads folder if not exists
         os.makedirs("downloads", exist_ok=True)
 
         # prepare filename & path
-        filename = f"{data['title']}.{data['format']}"
+        safe_title = re.sub(r'[\\/*?:"<>|]',"", data.get('title','unknown'))
+        filename = f"{safe_title}.{data.get('format', format)}"
         filepath = os.path.join("downloads", filename)
 
         # download file
         async with aiohttp.ClientSession() as session:
             async with session.get(data["stream_url"]) as resp:
+                if resp.status != 200:
+                    return await message.reply_text(f"❌ Error: File stream download failed. HTTP code: {resp.status}")
                 with open(filepath, 'wb') as f:
                     while True:
                         chunk = await resp.content.read(1024)
@@ -52,15 +58,14 @@ async def download_and_send(client, message, user_input, format):
 
         # send file
         if format == "mp3":
-            await message.reply_audio(audio=filepath, title=data['title'], performer=data.get("author"))
+            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"))
         else:
-            await message.reply_video(video=filepath, caption=data['title'])
+            await message.reply_video(video=filepath, caption=data.get('title'))
 
         os.remove(filepath)
 
     except Exception as e:
         await message.reply_text(f"⚠️ Failed: `{str(e)}`")
-
 
 @bot.on_message(filters.command("song") & filters.private)
 async def song_command(client, message):
@@ -69,12 +74,9 @@ async def song_command(client, message):
     user_input = message.text.split(None, 1)[1]
     await download_and_send(client, message, user_input, "mp3")
 
-
 @bot.on_message(filters.command("video") & filters.private)
 async def video_command(client, message):
     if len(message.command) < 2:
         return await message.reply_text("❗ Usage: /video <query or YouTube URL>")
     user_input = message.text.split(None, 1)[1]
     await download_and_send(client, message, user_input, "mp4")
-
-                                           
