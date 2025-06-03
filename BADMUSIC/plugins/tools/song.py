@@ -5,6 +5,7 @@ import aiohttp
 import os
 import re
 import asyncio
+from BADMUSIC import app
 
 API_KEY = "badmusic_ytstream_apikey_2025"
 BASE_URL = "http://3.0.146.239:1470/youtube"
