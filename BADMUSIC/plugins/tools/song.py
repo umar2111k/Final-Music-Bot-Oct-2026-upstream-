@@ -72,9 +72,9 @@ async def download_and_send(client, message, user_input, req_format, format_id=N
         )
 
         if req_format == "mp3":
-            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"), caption=cap, parse_mode="HTML")
+            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"), caption=cap")
         else:
-            await message.reply_video(video=filepath, caption=cap, parse_mode="HTML")
+            await message.reply_video(video=filepath, caption=cap")
         os.remove(filepath)
     except Exception as e:
         await message.reply_text(f"⚠️ ꜰᴀɪʟᴇᴅ: `{str(e)}`")
