@@ -62,13 +62,13 @@ async def download_and_send(client, message, user_input, req_format, format_id=N
                             break
                         f.write(chunk)
 
-        # Caption block
+        # Clean, safe caption (NO <blockquote>)
         cap = (
-            f"<blockquote>❖ sᴏɴɢ ɴᴀᴍᴇ ➥ {data.get('title','')}</blockquote>\n"
-            f"<blockquote>● ᴀʟʙᴜᴍ ➥ {song_info.get('album','-') if song_info else '-'}\n"
-            f"● ʀᴇʟᴇᴀꜱᴇ ᴅᴀᴛᴇ ➥ {song_info.get('releaseDate','-') if song_info else '-'}\n"
-            f"● ʀᴇǫᴜᴇꜱᴛᴇᴅ ʙʏ ➥ {message.from_user.mention}</blockquote>\n"
-            f"<blockquote>❖ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ➥ @pb_sukh </blockquote>"
+            f"<b>❖ Song Name:</b> <i>{data.get('title','')}</i>\n"
+            f"<b>● Album:</b> <i>{song_info.get('album','-') if song_info else '-'}</i>\n"
+            f"<b>● Release Date:</b> <i>{song_info.get('releaseDate','-') if song_info else '-'}</i>\n"
+            f"<b>● Requested by:</b> <i>{message.from_user.mention}</i>\n"
+            f"<b>❖ Powered by:</b> <i>@pb_sukh</i>"
         )
 
         if req_format == "mp3":
@@ -89,10 +89,7 @@ async def song_command(client, message):
     btns = []
     for f in data.get("formats", {}).get("audio", []):
         size_mb = f.get("filesize", 0)
-        if size_mb:
-            size_str = f"{round(size_mb/1024/1024,1)} MB"
-        else:
-            size_str = "?"
+        size_str = f"{round(size_mb/1024/1024,1)} MB" if size_mb else "?"
         note = f"{f.get('abr','?')}kbps" if f.get("abr") else f.get("format_note", "")
         btns.append([
             InlineKeyboardButton(
@@ -114,10 +111,7 @@ async def video_command(client, message):
     btns = []
     for f in data.get("formats", {}).get("video", []):
         size_mb = f.get("filesize", 0)
-        if size_mb:
-            size_str = f"{round(size_mb/1024/1024,1)} MB"
-        else:
-            size_str = "?"
+        size_str = f"{round(size_mb/1024/1024,1)} MB" if size_mb else "?"
         note = f"{f.get('resolution','?')}p" if f.get("resolution") else f.get("format_note", "")
         btns.append([
             InlineKeyboardButton(
