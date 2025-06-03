@@ -44,6 +44,19 @@ async def download_and_send(client, message, user_input, format):
         filename = f"{safe_title}.{data.get('format', format)}"
         filepath = os.path.join("downloads", filename)
 
+        # Yahan song/video info ka dict bana lo (API response ke according adjust kar sakte ho)
+        song_info = {
+            "trackName": data.get("title", "Unknown"),
+            "album": data.get("album", "Unknown Album"),
+            "releaseDate": data.get("release_date", "Unknown Date")
+        }
+        caption = (f"""<blockquote>❖ sᴏɴɢ ɴᴀᴍᴇ ➥ {song_info['trackName']}</blockquote>\n"""
+                   f"""<blockquote>● ᴀʟʙᴜᴍ ➥ {song_info['album']}\n"""
+                   f"""● ʀᴇʟᴇᴀsᴇ ᴅᴀᴛᴇ ➥ {song_info['releaseDate']}\n"""
+                   f"""● ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ ➥ {message.from_user.mention}</blockquote>\n"""
+                   f"""<blockquote>❖ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ➥ @PB_SUKH </blockquote>"""
+        )
+
         # download file
         async with aiohttp.ClientSession() as session:
             async with session.get(data["stream_url"]) as resp:
@@ -56,11 +69,11 @@ async def download_and_send(client, message, user_input, format):
                             break
                         f.write(chunk)
 
-        # send file
+        # send file with custom caption
         if format == "mp3":
-            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"))
+            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"), caption=caption, parse_mode="html")
         else:
-            await message.reply_video(video=filepath, caption=data.get('title'))
+            await message.reply_video(video=filepath, caption=caption, parse_mode="html")
 
         os.remove(filepath)
 
