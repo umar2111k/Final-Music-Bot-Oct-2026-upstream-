@@ -47,7 +47,7 @@ async def download_and_send(client, message, user_input, req_format, format_id=N
             return await message.reply_text(f"❌ ᴇʀʀᴏʀ:  ꜱᴏɴɢ ɴᴏᴛ ꜰᴏᴜɴᴅ ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ {data}")
 
         os.makedirs("downloads", exist_ok=True)
-        safe_title = re.sub(r'[\\/*?:"<>|]',"", data.get('title','unknown'))
+        safe_title = re.sub(r'[\\/*?:"<>|]', "", data.get('title', 'unknown'))
         filename = f"{safe_title}.{data.get('selected_ext', req_format)}"
         filepath = os.path.join("downloads", filename)
 
@@ -72,9 +72,9 @@ async def download_and_send(client, message, user_input, req_format, format_id=N
         )
 
         if req_format == "mp3":
-            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"), caption=cap")
+            await message.reply_audio(audio=filepath, title=data.get('title'), performer=data.get("author"), caption=cap)
         else:
-            await message.reply_video(video=filepath, caption=cap")
+            await message.reply_video(video=filepath, caption=cap)
         os.remove(filepath)
     except Exception as e:
         await message.reply_text(f"⚠️ ꜰᴀɪʟᴇᴅ: `{str(e)}`")
