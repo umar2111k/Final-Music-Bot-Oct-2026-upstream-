@@ -43,14 +43,14 @@ async def download_and_send(client, message, user_input, req_format, progress_ms
                 detail = resp.text
             if progress_msg:
                 await progress_msg.delete()
-            return await message.reply_text(f"❌ Error: {detail}")
+            return await message.reply_text(f"❌ ᴇʀʀᴏʀ: {detail}")
 
         data = resp.json()
         stream_url = data.get("stream_url")
         if not stream_url:
             if progress_msg:
                 await progress_msg.delete()
-            return await message.reply_text("❌ Song/Video not found ya download link nahi mila.")
+            return await message.reply_text("❌ ꜱᴏɴɢ/ᴠɪᴅᴇᴏ ɴᴏᴛ ꜰᴏᴜɴᴅ ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ.")
 
         os.makedirs("downloads", exist_ok=True)
         safe_title = re.sub(r'[\\/*?:"<>|]', "", data.get('title', 'unknown'))
@@ -63,7 +63,7 @@ async def download_and_send(client, message, user_input, req_format, progress_ms
                 if resp_stream.status != 200:
                     if progress_msg:
                         await progress_msg.delete()
-                    return await message.reply_text(f"❌ File download failed. HTTP Code: {resp_stream.status}")
+                    return await message.reply_text(f"❌ ꜰɪʟᴇ ᴅᴏᴡɴʟᴏᴀᴅ ꜰᴀɪʟᴇᴅ. ʜᴛᴛᴘ ᴄᴏᴅᴇ: {resp_stream.status}")
                 with open(filepath, "wb") as f:
                     while True:
                         chunk = await resp_stream.content.read(1024*32)
@@ -72,10 +72,10 @@ async def download_and_send(client, message, user_input, req_format, progress_ms
                         f.write(chunk)
 
         caption = (
-            f"<b>❖ Song/Video Name:</b> <i>{data.get('title','')}</i>\n"
-            f"<b>● Uploader:</b> <i>{data.get('author','-')}</i>\n"
-            f"<b>● Requested by:</b> <i>{message.from_user.mention}</i>\n"
-            f"<b>❖ Powered by:</b> <i>@pb_sukh</i>"
+            f"<b>❖ ꜱᴏɴɢ/ᴠɪᴅᴇᴏ ɴᴀᴍᴇ:</b> <i>{data.get('title','')}</i>\n"
+            f"<b>● ᴜᴘʟᴏᴀᴅᴇʀ:</b> <i>{data.get('author','-')}</i>\n"
+            f"<b>● ʀᴇQᴜᴇꜱᴛᴇᴅ ʙʏ:</b> <i>{message.from_user.mention}</i>\n"
+            f"<b>❖ ᴘᴏᴡᴇʀᴇᴅ ʙʏ:</b> <i>@PB_SUKH</i>"
         )
 
         if req_format == "mp3":
@@ -88,57 +88,41 @@ async def download_and_send(client, message, user_input, req_format, progress_ms
     except Exception as e:
         if progress_msg:
             await progress_msg.delete()
-        await message.reply_text(f"⚠️ Download failed: `{str(e)}`")
+        await message.reply_text(f"⚠️ ᴅᴏᴡɴʟᴏᴀᴅ ꜰᴀɪʟᴇᴅ: `{str(e)}`")
 
 @app.on_message(filters.command("song"))
 async def song_command(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply_text("❗ Usage: /song <song name or YouTube URL>")
+        return await message.reply_text("❗ ᴜꜱᴀɢᴇ: /song ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ꜱᴏɴɢ ɴᴀᴍᴇ ᴏʀ ᴜʀʟ ᴛᴏ ꜱᴇᴀʀᴄʜ ꜰᴏʀ.")
     user_input = message.text.split(None, 1)[1]
     # Delete the user command message immediately
     try:
         await message.delete()
     except Exception:
         pass
-    msg = await message.reply_text("🔎 Fetching audio info & download link...")
+    msg = await message.reply_text("🔎 ꜰᴇᴛᴄʜɪɴɢ ᴀᴜᴅɪᴏ ꜰᴏʀᴍᴀᴛꜱ...")
     info, status = await fetch_info(user_input, "mp3")
     if status != 200 or not info.get("stream_url"):
-        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Song not found'}")
+        await msg.edit_text(f"❌ ᴇʀʀᴏʀ: {info.get('detail') or 'ꜱᴏɴɢ ɴᴏᴛ ꜰᴏᴜɴᴅ'}")
         return
-    progress_msg = await msg.edit_text("⏬ Downloading audio, please wait...")
+    progress_msg = await msg.edit_text("⏬ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴀᴜᴅɪᴏ, ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ...")
     await download_and_send(client, message, user_input, "mp3", progress_msg=progress_msg)
 
 @app.on_message(filters.command("video"))
 async def video_command(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply_text("❗ Usage: /video <video name or YouTube URL>")
+        return await message.reply_text("❗ ᴜꜱᴀɢᴇ: /video ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ꜱᴏɴɢ ɴᴀᴍᴇ ᴏʀ ᴜʀʟ ᴛᴏ ꜱᴇᴀʀᴄʜ ꜰᴏʀ.")
     user_input = message.text.split(None, 1)[1]
     # Delete the user command message immediately
     try:
         await message.delete()
     except Exception:
         pass
-    msg = await message.reply_text("🔎 Fetching video info & download link...")
+    msg = await message.reply_text("🔎 ꜰᴇᴛᴄʜɪɴɢ ᴠɪᴅᴇᴏ ꜰᴏʀᴍᴀᴛꜱ...")
     info, status = await fetch_info(user_input, "mp4")
     if status != 200 or not info.get("stream_url"):
-        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Video not found'}")
+        await msg.edit_text(f"❌ ᴇʀʀᴏʀ: {info.get('detail') or 'ᴠɪᴅᴇᴏ ɴᴏᴛ ꜰᴏᴜɴᴅ'}")
         return
-    progress_msg = await msg.edit_text("⏬ Downloading video, please wait...")
+    progress_msg = await msg.edit_text("⏬ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴠɪᴅᴇᴏ, ᴘʟᴇᴀꜱᴇ ᴡᴀɪᴛ....")
     await download_and_send(client, message, user_input, "mp4", progress_msg=progress_msg)
 
-@app.on_message(filters.command("songbass"))
-async def songbass_command(client, message: Message):
-    if len(message.command) < 2:
-        return await message.reply_text("❗ Usage: /songbass <song name or YouTube URL>")
-    user_input = message.text.split(None, 1)[1]
-    try:
-        await message.delete()
-    except Exception:
-        pass
-    msg = await message.reply_text("🔎 Fetching bass boosted audio info & download link...")
-    info, status = await fetch_info(user_input, "bass")
-    if status != 200 or not info.get("stream_url"):
-        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Song not found'}")
-        return
-    progress_msg = await msg.edit_text("⏬ Downloading bass boosted audio, please wait...")
-    await download_and_send(client, message, user_input, "bass", progress_msg=progress_msg)
