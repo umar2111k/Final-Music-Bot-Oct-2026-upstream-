@@ -125,3 +125,20 @@ async def video_command(client, message: Message):
         return
     progress_msg = await msg.edit_text("⏬ Downloading video, please wait...")
     await download_and_send(client, message, user_input, "mp4", progress_msg=progress_msg)
+
+@app.on_message(filters.command("songbass"))
+async def songbass_command(client, message: Message):
+    if len(message.command) < 2:
+        return await message.reply_text("❗ Usage: /songbass <song name or YouTube URL>")
+    user_input = message.text.split(None, 1)[1]
+    try:
+        await message.delete()
+    except Exception:
+        pass
+    msg = await message.reply_text("🔎 Fetching bass boosted audio info & download link...")
+    info, status = await fetch_info(user_input, "bass")
+    if status != 200 or not info.get("stream_url"):
+        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Song not found'}")
+        return
+    progress_msg = await msg.edit_text("⏬ Downloading bass boosted audio, please wait...")
+    await download_and_send(client, message, user_input, "bass", progress_msg=progress_msg)
