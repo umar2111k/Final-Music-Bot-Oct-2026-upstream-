@@ -67,14 +67,14 @@ async def download_and_send(client, message, user_input, format):
     except Exception as e:
         await message.reply_text(f"⚠️ ꜰᴀɪʟᴇᴅ: `{str(e)}`")
 
-@app.on_message(filters.command("song") & filters.private)
+@app.on_message(filters.command("song"))
 async def song_command(client, message):
     if len(message.command) < 2:
         return await message.reply_text("❗ ᴜꜱᴀɢᴇ: /song ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ꜱᴏɴɢ ɴᴀᴍᴇ ᴏʀ ᴜʀʟ ᴛᴏ ꜱᴇᴀʀᴄʜ ꜰᴏʀ.")
     user_input = message.text.split(None, 1)[1]
     await download_and_send(client, message, user_input, "mp3")
 
-@app.on_message(filters.command("video") & filters.private)
+@app.on_message(filters.command("video"))
 async def video_command(client, message):
     if len(message.command) < 2:
         return await message.reply_text("❗ ᴜꜱᴀɢᴇ: /video ᴘʟᴇᴀꜱᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ꜱᴏɴɢ ɴᴀᴍᴇ ᴏʀ ᴜʀʟ ᴛᴏ ꜱᴇᴀʀᴄʜ ꜰᴏʀ.")
