@@ -23,7 +23,7 @@ async def fetch_info(user_input, req_format):
     resp = requests.get(BASE_URL, params=params)
     return resp.json(), resp.status_code
 
-async def download_and_send(client, message, user_input, req_format):
+async def download_and_send(client, message, user_input, req_format, progress_msg=None):
     params = {
         "format": req_format,
         "download": True,
@@ -34,7 +34,6 @@ async def download_and_send(client, message, user_input, req_format):
     else:
         params["query"] = user_input.strip()
 
-    # Step 1: Call API to get direct stream URL and info
     try:
         resp = requests.get(BASE_URL, params=params)
         if resp.status_code != 200:
@@ -42,14 +41,17 @@ async def download_and_send(client, message, user_input, req_format):
                 detail = resp.json().get("detail", "API error")
             except Exception:
                 detail = resp.text
+            if progress_msg:
+                await progress_msg.delete()
             return await message.reply_text(f"❌ Error: {detail}")
 
         data = resp.json()
         stream_url = data.get("stream_url")
         if not stream_url:
+            if progress_msg:
+                await progress_msg.delete()
             return await message.reply_text("❌ Song/Video not found ya download link nahi mila.")
 
-        # Step 2: Download the file from stream URL
         os.makedirs("downloads", exist_ok=True)
         safe_title = re.sub(r'[\\/*?:"<>|]', "", data.get('title', 'unknown'))
         ext = "mp3" if req_format == "mp3" else "mp4"
@@ -59,6 +61,8 @@ async def download_and_send(client, message, user_input, req_format):
         async with aiohttp.ClientSession() as session:
             async with session.get(stream_url) as resp_stream:
                 if resp_stream.status != 200:
+                    if progress_msg:
+                        await progress_msg.delete()
                     return await message.reply_text(f"❌ File download failed. HTTP Code: {resp_stream.status}")
                 with open(filepath, "wb") as f:
                     while True:
@@ -79,7 +83,11 @@ async def download_and_send(client, message, user_input, req_format):
         else:
             await message.reply_video(video=filepath, caption=caption)
         os.remove(filepath)
+        if progress_msg:
+            await progress_msg.delete()
     except Exception as e:
+        if progress_msg:
+            await progress_msg.delete()
         await message.reply_text(f"⚠️ Download failed: `{str(e)}`")
 
 @app.on_message(filters.command("song"))
@@ -87,21 +95,33 @@ async def song_command(client, message: Message):
     if len(message.command) < 2:
         return await message.reply_text("❗ Usage: /song <song name or YouTube URL>")
     user_input = message.text.split(None, 1)[1]
+    # Delete the user command message immediately
+    try:
+        await message.delete()
+    except Exception:
+        pass
     msg = await message.reply_text("🔎 Fetching audio info & download link...")
     info, status = await fetch_info(user_input, "mp3")
     if status != 200 or not info.get("stream_url"):
-        return await msg.edit_text(f"❌ Error: {info.get('detail') or 'Song not found'}")
-    await msg.edit_text("⏬ Downloading audio, please wait...")
-    await download_and_send(client, message, user_input, "mp3")
+        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Song not found'}")
+        return
+    progress_msg = await msg.edit_text("⏬ Downloading audio, please wait...")
+    await download_and_send(client, message, user_input, "mp3", progress_msg=progress_msg)
 
 @app.on_message(filters.command("video"))
 async def video_command(client, message: Message):
     if len(message.command) < 2:
         return await message.reply_text("❗ Usage: /video <video name or YouTube URL>")
     user_input = message.text.split(None, 1)[1]
+    # Delete the user command message immediately
+    try:
+        await message.delete()
+    except Exception:
+        pass
     msg = await message.reply_text("🔎 Fetching video info & download link...")
     info, status = await fetch_info(user_input, "mp4")
     if status != 200 or not info.get("stream_url"):
-        return await msg.edit_text(f"❌ Error: {info.get('detail') or 'Video not found'}")
-    await msg.edit_text("⏬ Downloading video, please wait...")
-    await download_and_send(client, message, user_input, "mp4")
+        await msg.edit_text(f"❌ Error: {info.get('detail') or 'Video not found'}")
+        return
+    progress_msg = await msg.edit_text("⏬ Downloading video, please wait...")
+    await download_and_send(client, message, user_input, "mp4", progress_msg=progress_msg)
