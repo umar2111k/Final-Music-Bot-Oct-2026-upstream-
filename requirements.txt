@@ -7,10 +7,11 @@ ffmpeg-python
 gitpython
 hachoir
 heroku3
-httpx==0.27.2
-ntgcalls==1.2.3
 motor
+httpx==0.27.2
 pillow==11.2.1
+ntgcalls==1.3.4
+py-tgcalls==2.1.1
 psutil
 pykeyboard
 python-dotenv
@@ -22,6 +23,5 @@ tgcrypto
 unidecode
 yt-dlp~=2025.5.22
 git+https://github.com/Badmunda50/PyroB.git
-git+https://github.com/Badmunda50/PytgB.git@master
 git+https://github.com/alexmercerind/youtube-search-python@main
 git+https://github.com/joetats/youtube_search@master
