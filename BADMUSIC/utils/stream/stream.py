@@ -14,9 +14,8 @@ from BADMUSIC.utils.inline import aq_markup, close_markup, stream_markup
 from BADMUSIC.utils.pastebin import BadBin
 from BADMUSIC.utils.stream.queue import put_queue, put_queue_index
 from BADMUSIC.utils.thumbnails import get_thumb
-from BADMUSIC.utils.errors import capture_internal_err
 
-@capture_internal_err
+
 async def stream(
     _,
     mystic,
@@ -419,4 +418,4 @@ async def stream(
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "tg"
             await mystic.delete()
-                
+      
