@@ -13,7 +13,7 @@ from BADMUSIC.utils.database import is_on_off
 from BADMUSIC.utils.formatters import time_to_seconds, seconds_to_min
 
 # ---- API Stream URL Helper ----
-async def get_stream_url(query, video=False):
+async def get_stream_url(query, video=True):
     api_url = "http://3.0.146.239:1470/youtube"
     api_key = "badmusic_ytstream_apikey_2025"
     async with httpx.AsyncClient(timeout=60) as client:
