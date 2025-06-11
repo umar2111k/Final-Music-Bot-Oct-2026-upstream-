@@ -14,8 +14,8 @@ from BADMUSIC.utils.formatters import time_to_seconds, seconds_to_min
 
 # ---- API Stream URL Helper ----
 async def get_stream_url(query, video=True):
-    api_url = "http://3.0.146.239:1470/youtube"
-    api_key = "badmusic_ytstream_apikey_2025"
+    api_url = "https://youtubeeeer.onrender.com"
+    api_key = "sandeep_youtube_api"
     async with httpx.AsyncClient(timeout=60) as client:
         params = {"query": query, "video": video, "api_key": api_key}
         response = await client.get(api_url, params=params)
@@ -23,7 +23,6 @@ async def get_stream_url(query, video=True):
             return ""
         info = response.json()
         return info.get("stream_url")
-
 async def shell_cmd(cmd):
     proc = await asyncio.create_subprocess_shell(
         cmd,
