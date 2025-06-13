@@ -22,6 +22,6 @@ tgcrypto
 unidecode
 yt-dlp==2025.5.22
 git+https://github.com/badmunda98/Pyroi@Bad
-git+https://github.com/Badmunda50/PyroB.git
+git+https://github.com/badmunda98/PyroB@dev
 git+https://github.com/alexmercerind/youtube-search-python@main
 git+https://github.com/joetats/youtube_search@master
