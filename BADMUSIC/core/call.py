@@ -37,7 +37,7 @@ from BADMUSIC.utils.errors import capture_internal_err, send_large_error
 autoend = {}
 counter = {}
 
-def dynamic_media_stream(path: str, video: bool = False, ffmpeg_params: str = None) -> MediaStream:
+def dynamic_media_stream(path: str, video: bool = True, ffmpeg_params: str = None) -> MediaStream:
     return MediaStream(
         audio_path=path,
         media_path=path,
