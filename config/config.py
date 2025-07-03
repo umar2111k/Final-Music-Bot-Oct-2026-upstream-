@@ -8,35 +8,35 @@ from distutils.util import strtobool
 load_dotenv()
 
 # Get this value from my.telegram.org/apps
-API_ID = int(getenv("API_ID"))
-API_HASH = getenv("API_HASH")
+API_ID = int(getenv("API_ID", "21404766"))
+API_HASH = getenv("API_HASH", "3363e6cbefba6db06baa6710c192d71e")
 
 # Get your token from @BotFather on Telegram.
-BOT_TOKEN = getenv("BOT_TOKEN")
+BOT_TOKEN = getenv("BOT_TOKEN", "7485171019:AAHln_a5FzRMsN_GHP3_3l6PEVC6Gwv8EPo")
 
 # Get your mongo url from cloud.mongodb.com
-MONGO_DB_URI = getenv("MONGO_DB_URI", None)
+MONGO_DB_URI = getenv("MONGO_DB_URI", "mongodb+srv://Aichatbot:seconddb2@cluster0.itzpj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 9000))
 
 # Chat id of a group for logging bot's activities
-LOGGER_ID = int(getenv("LOGGER_ID", "0"))
+LOGGER_ID = int(getenv("LOGGER_ID", "-1002495188807"))
 
 # Get this value from @MissRose_bot on Telegram by /id
-OWNER_ID = int(getenv("OWNER_ID", None))
+OWNER_ID = int(getenv("OWNER_ID", "6170050819"))
 
 # Cookies # https://batbin.me
 COOKIES = getenv("COOKIES", "https://batbin.me/donum")
 
 
 # Set it true if you want your bot to be private only [You'll need to allow CHAT_ID via /authorize command then only your bot will play music in that chat.]
-PRIVATE_BOT_MODE = strtobool(getenv("PRIVATE_BOT_MODE", "False"))
+PRIVATE_BOT_MODE = strtobool(getenv("PRIVATE_BOT_MODE", "True"))
 
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
-HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
+HEROKU_APP_NAME = getenv("HEROKU_APP_NAME", "ronak-musicc")
 # Get it from http://dashboard.heroku.com/account
-HEROKU_API_KEY = getenv("HEROKU_API_KEY")
+HEROKU_API_KEY = getenv("HEROKU_API_KEY", "HRKU-AAlONfi-HBe995oIayzXbJEPyzox4kQaWoHR9y9xOegQ_____wopzvHPi8WE"")
 
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
@@ -50,16 +50,16 @@ GIT_TOKEN = getenv(
 API_URL = getenv("API_URL", 'https://api.thequickearn.xyz') 
 API_KEY = getenv("API_KEY", '30DxNexGenBots938b57') 
 
-SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/PBX_UPDATE")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/PBX_CHAT")
+SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/Spark_Developer")
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/Spark_Developer")
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
 
 
 # Get this credentials from https://developer.spotify.com/dashboard
-SPOTIFY_CLIENT_ID = getenv("SPOTIFY_CLIENT_ID", None)
-SPOTIFY_CLIENT_SECRET = getenv("SPOTIFY_CLIENT_SECRET", None)
+SPOTIFY_CLIENT_ID = getenv("SPOTIFY_CLIENT_ID", "19d2fe49f79143fa90e75be9c95255db")
+SPOTIFY_CLIENT_SECRET = getenv("SPOTIFY_CLIENT_SECRET", "9e3e42756a8040a89424e7bf3343fa19")
 
 
 # Maximum limit for fetching playlist's track from youtube, spotify, apple links.
