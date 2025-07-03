@@ -36,7 +36,7 @@ PRIVATE_BOT_MODE = strtobool(getenv("PRIVATE_BOT_MODE", "True"))
 # Your heroku app name
 HEROKU_APP_NAME = getenv("HEROKU_APP_NAME", "ronak-musicc")
 # Get it from http://dashboard.heroku.com/account
-HEROKU_API_KEY = getenv("HEROKU_API_KEY", "HRKU-AAlONfi-HBe995oIayzXbJEPyzox4kQaWoHR9y9xOegQ_____wopzvHPi8WE"")
+HEROKU_API_KEY = getenv("HEROKU_API_KEY", "HRKU-AAlONfi-HBe995oIayzXbJEPyzox4kQaWoHR9y9xOegQ_____wopzvHPi8WE")
 
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
