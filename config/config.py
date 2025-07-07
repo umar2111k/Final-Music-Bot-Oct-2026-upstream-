@@ -26,7 +26,7 @@ LOGGER_ID = int(getenv("LOGGER_ID", "-1002495188807"))
 OWNER_ID = int(getenv("OWNER_ID", "6170050819"))
 
 # Cookies # https://batbin.me
-COOKIES = getenv("COOKIES", "https://batbin.me/donum")
+COOKIES = getenv("COOKIES", "https://batbin.me/overdried")
 
 
 # Set it true if you want your bot to be private only [You'll need to allow CHAT_ID via /authorize command then only your bot will play music in that chat.]
