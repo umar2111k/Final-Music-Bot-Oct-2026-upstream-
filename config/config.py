@@ -26,7 +26,9 @@ LOGGER_ID = int(getenv("LOGGER_ID", "-1002495188807"))
 OWNER_ID = int(getenv("OWNER_ID", "6170050819"))
 
 # Cookies # https://batbin.me
-COOKIES = getenv("COOKIES", "# Netscape HTTP Cookie File
+#COOKIES = getenv("COOKIES", 
+COOKIES = """
+# Netscape HTTP Cookie File
 # https://curl.haxx.se/rfc/cookie_spec.html
 # This is a generated file! Do not edit.
 .youtube.com	TRUE	/	TRUE	1738343187	GPS	1
@@ -63,7 +65,8 @@ COOKIES = getenv("COOKIES", "# Netscape HTTP Cookie File
 .youtube.com	TRUE	/	FALSE	1747216501	ST-32nzby	csn=jGqMVXaFyHto3v-0&itct=CDkQ_FoiEwjL47TO2KKNAxUwQioJHQV4NJoyCmctaGlnaC1yZWNaD0ZFd2hhdF90b193YXRjaJoBBhCOHhieAQ%3D%3D
 .youtube.com	TRUE	/	TRUE	0	YSC	4SCGsP_C1r4
 .youtube.com	TRUE	/	FALSE	1751479742	ST-1t6yh3d	csn=PcEdNXSPQrM0Y3d2&itct=CE8Q_FoiEwiWvum14p6OAxXWXvUHHTz9NX0yCmctaGlnaC1yZWNaD0ZFd2hhdF90b193YXRjaJoBBhCOHhieAQ%3D%3D
-.youtube.com	TRUE	/	FALSE	1751479819	ST-o33lu0	csn=YCr-QY2AezrDOM8_&itct=CIkBEPxaGAAiEwjNvf-74p6OAxVasqwCHbRGN0kyB3JlbGF0ZWRIurP0wv_82uuHAZoBBQgBEPgd")
+.youtube.com	TRUE	/	FALSE	1751479819	ST-o33lu0	csn=YCr-QY2AezrDOM8_&itct=CIkBEPxaGAAiEwjNvf-74p6OAxVasqwCHbRGN0kyB3JlbGF0ZWRIurP0wv_82uuHAZoBBQgBEPgd 
+""")
 
 
 # Set it true if you want your bot to be private only [You'll need to allow CHAT_ID via /authorize command then only your bot will play music in that chat.]
