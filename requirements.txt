@@ -21,7 +21,7 @@ spotipy
 tgcrypto
 unidecode
 yt-dlp==2025.5.22
-git+https://github.com/badmunda98/Pyroi@Bad
+#git+https://github.com/badmunda98/Pyroi@Bad
 pyrogram
 #git+https://github.com/badmunda98/PyroB@dev
 git+https://github.com/alexmercerind/youtube-search-python@main
