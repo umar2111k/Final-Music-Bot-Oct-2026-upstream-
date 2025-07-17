@@ -30,3 +30,4 @@ git+https://github.com/joetats/youtube_search@master
 
 pyrofork==2.3.68
 TgCrypto-pyrofork==1.2.7
+pykeyboard
