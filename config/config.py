@@ -66,7 +66,7 @@ COOKIES = """
 .youtube.com	TRUE	/	TRUE	0	YSC	4SCGsP_C1r4
 .youtube.com	TRUE	/	FALSE	1751479742	ST-1t6yh3d	csn=PcEdNXSPQrM0Y3d2&itct=CE8Q_FoiEwiWvum14p6OAxXWXvUHHTz9NX0yCmctaGlnaC1yZWNaD0ZFd2hhdF90b193YXRjaJoBBhCOHhieAQ%3D%3D
 .youtube.com	TRUE	/	FALSE	1751479819	ST-o33lu0	csn=YCr-QY2AezrDOM8_&itct=CIkBEPxaGAAiEwjNvf-74p6OAxVasqwCHbRGN0kyB3JlbGF0ZWRIurP0wv_82uuHAZoBBQgBEPgd 
-""")
+"""
 
 
 # Set it true if you want your bot to be private only [You'll need to allow CHAT_ID via /authorize command then only your bot will play music in that chat.]
