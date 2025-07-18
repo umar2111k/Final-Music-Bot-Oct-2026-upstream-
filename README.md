@@ -2,6 +2,10 @@
     「 ❣️ʙᴀᴅ ᴍᴜsɪᴄ ❣️ 」
 </h2>
 
+- **Heroku hosting**
+- - [![Vps](https://img.shields.io/badge/ʙᴀᴅᴍᴜsɪᴄ-ᴅᴇᴘʟᴏʏ%20ᴛᴏ%20ʜᴇʀᴏᴋᴜ-blue?style=for-the-badge&logo=vps)](https://gitlab.com/Badhacker98/BADMUSIC/blob/bad/MUSIC/heorku.md)
+ 
+
 </h2>
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
