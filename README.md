@@ -1,7 +1,15 @@
 <h2 align="center">
     「 ❣️ʙᴀᴅ ᴍᴜsɪᴄ ❣️ 」
 </h2>
-Click [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy).
+
+<details>
+<summary><b>Deploy on Heroku</b></summary>
+
+1. Fork and Star the repo.
+2. Click [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy).
+3. Enter required variables and click deploy ✅.
+
+</details>
 
 
 - **Heroku hosting**
