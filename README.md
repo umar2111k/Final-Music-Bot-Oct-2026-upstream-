@@ -1,6 +1,8 @@
 <h2 align="center">
     「 ❣️ʙᴀᴅ ᴍᴜsɪᴄ ❣️ 」
 </h2>
+Click [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy).
+
 
 - **Heroku hosting**
 - - [![Vps](https://img.shields.io/badge/ʙᴀᴅᴍᴜsɪᴄ-ᴅᴇᴘʟᴏʏ%20ᴛᴏ%20ʜᴇʀᴏᴋᴜ-blue?style=for-the-badge&logo=vps)](https://github.com/Umar565/Final-Music-Bot-2.0/blob/bad/MUSIC/heorku.md)
