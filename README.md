@@ -2,14 +2,15 @@
     「 ❣️ʙᴀᴅ ᴍᴜsɪᴄ ❣️ 」
 </h2>
 
-<details>
-<summary><b>Deploy on Heroku</b></summary>
+## 🚀 Heroku Deployment
 
-1. Fork and Star the repo.
-2. Click [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy/https://github.com/Umar565/Final-Music-Bot-2.0).
-3. Enter required variables and click deploy ✅.
+Deploy **Annie Music Bot** on Heroku easily:
 
-</details>
+<a href="https://dashboard.heroku.com/new?template=https://github.com/Umar565/Final-Music-Bot-2.0"><img src="https://img.shields.io/badge/Deploy%20To%20Heroku-red?style=for-the-badge&logo=heroku" width="200"/></a>
+
+---
+
+
 
 
 - **Heroku hosting**
