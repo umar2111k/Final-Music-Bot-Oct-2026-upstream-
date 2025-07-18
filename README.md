@@ -3,7 +3,7 @@
 </h2>
 
 - **Heroku hosting**
-- - [![Vps](https://img.shields.io/badge/ʙᴀᴅᴍᴜsɪᴄ-ᴅᴇᴘʟᴏʏ%20ᴛᴏ%20ʜᴇʀᴏᴋᴜ-blue?style=for-the-badge&logo=vps)](https://gitlab.com/Badhacker98/BADMUSIC/blob/bad/MUSIC/heorku.md)
+- - [![Vps](https://img.shields.io/badge/ʙᴀᴅᴍᴜsɪᴄ-ᴅᴇᴘʟᴏʏ%20ᴛᴏ%20ʜᴇʀᴏᴋᴜ-blue?style=for-the-badge&logo=vps)](https://github.com/Umar565/Final-Music-Bot-2.0/blob/bad/MUSIC/heorku.md)
  
 
 </h2>
