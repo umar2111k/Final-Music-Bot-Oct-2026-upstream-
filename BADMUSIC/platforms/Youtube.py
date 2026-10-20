@@ -13,7 +13,6 @@ from BADMUSIC.utils.database import is_on_off
 from BADMUSIC.utils.formatters import time_to_seconds, seconds_to_min
 
 
-import os
 import glob
 import random
 import logging
@@ -35,7 +34,7 @@ async def check_file_size(link):
         proc = await asyncio.create_subprocess_exec(
             "yt-dlp",
             "--cookies", cookie_txt_file(),
-            "--extractor-args", "youtube:client=android,tv,ios,web",
+            "--extractor-args", "youtube:client=android",
             "-J",
             link,
             stdout=asyncio.subprocess.PIPE,
@@ -46,7 +45,6 @@ async def check_file_size(link):
             print(f'Error:\n{stderr.decode()}')
             return None
             
-        # Parse output safely
         try:
             return json.loads(stdout.decode())
         except json.JSONDecodeError:
@@ -182,10 +180,10 @@ class YouTubeAPI:
         proc = await asyncio.create_subprocess_exec(
             "yt-dlp",
             "--cookies", cookie_txt_file(),
-            "--extractor-args", "youtube:client=android,tv,ios,web",
+            "--extractor-args", "youtube:client=android",
             "-g",
             "-f",
-            "best[height<=?720][width<=?1280]",
+            "best[height<=?720][width<=?1280]/best",
             f"{link}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -202,7 +200,7 @@ class YouTubeAPI:
         if "&" in link:
             link = link.split("&")[0]
         playlist = await shell_cmd(
-            f'yt-dlp -i --extractor-args "youtube:client=android,tv,ios,web" --get-id --flat-playlist --cookies {cookie_txt_file()} --playlist-end {limit} --skip-download {link}'
+            f'yt-dlp -i --extractor-args "youtube:client=android" --get-id --flat-playlist --cookies {cookie_txt_file()} --playlist-end {limit} --skip-download {link}'
         )
         try:
             result = playlist.split("\n")
@@ -243,7 +241,7 @@ class YouTubeAPI:
         ytdl_opts = {
             "quiet": True, 
             "cookiefile": cookie_txt_file(),
-            "extractor_args": {"youtube": {"client": ["android", "tv", "ios", "web"]}}
+            "extractor_args": {"youtube": {"client": ["android"]}}
         }
         
         ydl = yt_dlp.YoutubeDL(ytdl_opts)
@@ -318,7 +316,7 @@ class YouTubeAPI:
                 "quiet": True,
                 "cookiefile": cookie_txt_file(),
                 "no_warnings": True,
-                "extractor_args": {"youtube": {"client": ["android", "tv", "ios", "web"]}},
+                "extractor_args": {"youtube": {"client": ["android"]}},
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
             info = x.extract_info(link, False)
@@ -330,14 +328,14 @@ class YouTubeAPI:
 
         def video_dl():
             ydl_optssx = {
-                "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio[ext=m4a])",
+                "format": "bestvideo[height<=?720][width<=?1280]+bestaudio/best",
                 "outtmpl": "downloads/%(id)s.%(ext)s",
                 "geo_bypass": True,
                 "nocheckcertificate": True,
                 "quiet": True,
                 "cookiefile": cookie_txt_file(),
                 "no_warnings": True,
-                "extractor_args": {"youtube": {"client": ["android", "tv", "ios", "web"]}},
+                "extractor_args": {"youtube": {"client": ["android"]}},
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
             info = x.extract_info(link, False)
@@ -348,7 +346,7 @@ class YouTubeAPI:
             return xyz
 
         def song_video_dl():
-            formats = f"{format_id}+140"
+            formats = f"{format_id}+bestaudio/best"
             fpath = f"downloads/{title}"
             ydl_optssx = {
                 "format": formats,
@@ -360,7 +358,7 @@ class YouTubeAPI:
                 "cookiefile": cookie_txt_file(),
                 "prefer_ffmpeg": True,
                 "merge_output_format": "mp4",
-                "extractor_args": {"youtube": {"client": ["android", "tv", "ios", "web"]}},
+                "extractor_args": {"youtube": {"client": ["android"]}},
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
             x.download([link])
@@ -368,7 +366,7 @@ class YouTubeAPI:
         def song_audio_dl():
             fpath = f"downloads/{title}.%(ext)s"
             ydl_optssx = {
-                "format": format_id,
+                "format": "bestaudio/best",
                 "outtmpl": fpath,
                 "geo_bypass": True,
                 "nocheckcertificate": True,
@@ -383,7 +381,7 @@ class YouTubeAPI:
                         "preferredquality": "192",
                     }
                 ],
-                "extractor_args": {"youtube": {"client": ["android", "tv", "ios", "web"]}},
+                "extractor_args": {"youtube": {"client": ["android"]}},
             }
             x = yt_dlp.YoutubeDL(ydl_optssx)
             x.download([link])
@@ -404,10 +402,10 @@ class YouTubeAPI:
                 proc = await asyncio.create_subprocess_exec(
                     "yt-dlp",
                     "--cookies", cookie_txt_file(),
-                    "--extractor-args", "youtube:client=android,tv,ios,web",
+                    "--extractor-args", "youtube:client=android",
                     "-g",
                     "-f",
-                    "best[height<=?720][width<=?1280]",
+                    "bestvideo[height<=?720][width<=?1280]+bestaudio/best",
                     f"{link}",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
