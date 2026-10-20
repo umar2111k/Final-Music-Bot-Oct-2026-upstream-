@@ -11,7 +11,8 @@ from BADMUSIC.misc import sudo
 from BADMUSIC.plugins import ALL_MODULES
 from BADMUSIC.utils.database import get_banned_users, get_gbanned
 from config import BANNED_USERS
-
+from server import keep_alive
+keep_alive()
 # Color codes for terminal output
 RED = '\033[0;31m'
 GREEN = '\033[0;32m'
