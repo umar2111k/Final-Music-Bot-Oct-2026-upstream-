@@ -3,7 +3,7 @@ aiohttp
 asyncio
 beautifulsoup4
 dnspython
-ffmpeg-python
+ffmpeg-python==0.2.0
 gitpython
 hachoir
 heroku3
@@ -18,7 +18,7 @@ speedtest-cli
 spotipy
 tgcrypto
 unidecode
-yt-dlp
+yt-dlp[default]
 pyrogram==2.0.106
 py-tgcalls==2.1.1
 youtube-search-python
