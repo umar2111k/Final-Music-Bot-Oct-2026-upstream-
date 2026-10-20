@@ -8,15 +8,14 @@ from distutils.util import strtobool
 load_dotenv()
 
 # Get this value from my.telegram.org/apps
-API_ID = int(getenv("API_ID", "21404766"))
-API_HASH = getenv("API_HASH", "3363e6cbefba6db06baa6710c192d71e")
+API_ID = int(getenv("API_ID", "18109134"))
+API_HASH = getenv("API_HASH", "a22a1eda2a6a6a3067c6b5beb7252cae")
 
 # Get your token from @BotFather on Telegram.
-BOT_TOKEN = getenv("BOT_TOKEN", "7485171019:AAHln_a5FzRMsN_GHP3_3l6PEVC6Gwv8EPo")
+BOT_TOKEN = getenv("BOT_TOKEN", "7485171019:AAHqQ4z_k9fezyoEEANGhWU6B1OlBQJDZcY")
 
 # Get your mongo url from cloud.mongodb.com
-MONGO_DB_URI = getenv("MONGO_DB_URI", "mongodb+srv://RonakMusicbot:AQcCEy7e@cluster0.tfkbjew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-
+MONGO_DB_URI = getenv("MONGO_DB_URI", "mongodb+srv://garixo5821_db_user:QjGrPUmXeoIacgWF@cluster0.o0l1rqr.mongodb.net/")
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 9000))
 
 # Chat id of a group for logging bot's activities
