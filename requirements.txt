@@ -8,7 +8,7 @@ gitpython
 hachoir
 heroku3
 motor
-httpx
+httpx==0.27.2
 pillow
 psutil
 python-dotenv
