@@ -171,7 +171,10 @@ async def welcome(client, message: Message):
                     return await app.leave_chat(message.chat.id)
 
                 out = start_panel(_)
-                await message.reply_photo(
+                
+                # Yeh raha fix: Yahan await message.reply_photo() ki jagah send_media_spoiler() lagaya hai
+                await send_media_spoiler(
+                    message,
                     random.choice(IMAGE),
                     caption=_["start_3"].format(
                         message.from_user.first_name,
