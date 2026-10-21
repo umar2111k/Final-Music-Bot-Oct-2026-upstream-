@@ -15,13 +15,6 @@ from BADMUSIC.utils.pastebin import BadBin
 from BADMUSIC.utils.stream.queue import put_queue, put_queue_index
 from BADMUSIC.utils.thumbnails import get_thumb
 
-# ==========================================
-# DEBUG MODE SETTINGS
-# True = Chat me asli error print hoga (Fix karne ke liye)
-# False = Normal message aayega (Users ke liye)
-# ==========================================
-DEBUG_MODE = True
-
 
 async def stream(
     _,
@@ -54,9 +47,7 @@ async def stream(
                     thumbnail,
                     vidid,
                 ) = await YouTube.details(search, False if spotify else True)
-            except Exception as e:
-                if DEBUG_MODE:
-                    print(f"PLAYLIST DETAILS ERROR: {e}")
+            except:
                 continue
             if str(duration_min) == "None":
                 continue
@@ -86,9 +77,7 @@ async def stream(
                     file_path, direct = await YouTube.download(
                         vidid, mystic, video=status, videoid=True
                     )
-                except Exception as e:
-                    if DEBUG_MODE:
-                        raise AssistantErr(f"YT Download Error (Playlist): {e}")
+                except:
                     raise AssistantErr(_["play_14"])
                 await Bad.join_call(
                     chat_id,
@@ -152,12 +141,8 @@ async def stream(
             file_path, direct = await YouTube.download(
                 vidid, mystic, videoid=True, video=status
             )
-        except Exception as e:
-            if DEBUG_MODE:
-                print(f"YT DOWNLOAD ERROR: {e}")
-                raise AssistantErr(f"YT Download Error: {e}")
+        except:
             raise AssistantErr(_["play_14"])
-            
         if await is_active_chat(chat_id):
             await put_queue(
                 chat_id,
@@ -345,16 +330,9 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            try:
-                n, file_path = await YouTube.video(link)
-            except Exception as e:
-                if DEBUG_MODE:
-                    raise AssistantErr(f"YT Live Video Error: {e}")
-                raise AssistantErr(_["str_3"])
-                
+            n, file_path = await YouTube.video(link)
             if n == 0:
                 raise AssistantErr(_["str_3"])
-                
             await Bad.join_call(
                 chat_id,
                 original_chat_id,
@@ -440,3 +418,4 @@ async def stream(
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "tg"
             await mystic.delete()
+      
